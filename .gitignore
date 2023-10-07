@@ -9,6 +9,10 @@ out/
 
 # Docs
 docs/
+cosas_necesarias.txt
+trastos.sol
 
 # Dotenv file
 .env
+
+

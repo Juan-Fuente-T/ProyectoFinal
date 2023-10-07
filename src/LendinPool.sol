@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {IERC20} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
-import {ERC20} from "https://github.com/transmissions11/solmate/blob/main/src/tokens/ERC20.sol";
-import "./aToken.sol";
+//import {IERC20} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
+//import {ERC20} from "./libraries/ERC20.sol";
+import {AggregatorV3Interface} from "./libraries/AggregatorV3Interface.sol";
+import {aToken} from "./aToken.sol";
+import { getInterestRate } from "./InterestRates.sol";
 
 //COSAS A MEJORAR O EN QUE PENSAR
 //-Añadir EMIT, deposit, wihtdraw, borrow y repay
@@ -11,23 +13,51 @@ import "./aToken.sol";
 //-Añadir Intereses / Timestamp?
 //-¿Añadir balanceOf() a aToken.sol?
 
-//DUDAS:-¿Tengo que tener los contratos ERC20 (o los que importe) fisicamente en mi respositorio, no? Tengo que importar mi propio archivo aToken.sol,no?///  ¿Si para devolver deuda con Repay se envia más dinero del que hay, que ocurre? AAVE no controla que no se exceda. 
+//DUDAS:- ¿Por que no tener una direccion guardada en el contrato, por ejemplo del oraculo, y tener que estar metiendola con el constructor?? ///¿Tengo que tener los contratos ERC20 (o los que importe) fisicamente en mi respositorio, no? Tengo que importar mi propio archivo aToken.sol,no?///  ¿Si para devolver deuda con Repay se envia más dinero del que hay, que ocurre? AAVE no controla que no se exceda. 
 
-mapping(address => uint256) asset;
-mapping(address => uint256) debt;
-mapping(address => uint256) collateral;
-error ItCantBeZero();
-error InsufficientFunds();
-error DebtIsLower();
 
 contract LendingPool{
-    function deposit(address asset, uint256 amount, address onBehalfOf, uint256 referralCode) payable public{
+
+    interface IaToken internal{
+        function mint(address user, uint256 amount); 
+        function burn(address user, uint256 amount);
+}
+
+    address public aToken;
+    uint256 lastUpdatedTimestamp;
+    uint256 rate;
+    uint256 LTV = 75 * 10 ** 16;
+    
+
+    mapping(address => uint256) asset;
+    mapping(address => uint256) debt;
+    mapping(address => uint256) collateral;
+    mapping(address => uint256) depositTime;
+
+    error ItCantBeZero();
+    error InsufficientFunds();
+    error DebtIsLower();
+    error YouAlreadyHaveDebt();
+
+    function setToken(address _aToken) external{
+        aTokenInstance = IaToken(_aToken);
+    }
+    function setInterestRate(address _interestRate) external{
+        interestRate = _interestRate;
+    }
+
+    //function deposit(address asset, uint256 amount, address onBehalfOf, uint256 referralCode) payable public{
+    function deposit(address asset, uint256 amount) payable public{
+        despositTime[asset] = uint256(block.timestamp);
+
         ///CEI: Checks, Effects, Interactions
         if (amount == 0){
             revert ItCantBeZero();
-        //HAY QUE MINTEAR TOKENS
         asset[msg.sender] += amount;
-        }
+        //HAY QUE MINTEAR TOKENS
+        aTokenInstance.mint(msg.sender, amount);
+        
+    }
 
     function withdraw(address asset, uint256 amount, address to) public{
         ///CEI: Checks, Effects, Interactions
@@ -35,26 +65,50 @@ contract LendingPool{
             revert InsuffientFunds();
         }
         //HAY QUE QUEMAR TOKENS
+        aTokenInstance.burn(msg.sender, amount);
         asset[msg.sender] -= amount;
         payable(msg.sender).transfer(amount);
     }
 
-    function borrow(address asset, uint256 amount, uint256 interestRateMode, uint16 referralCode, address onBehalfOf)public {
-        if (asset[msg.sender]>amount*125/100){
-            collateral[msg.sender]+=amount*125/100;
-            asset[msg.sender]-=amount*125/100;
+    //function borrow(address asset, uint256 amount, uint256 interestRateMode, uint16 referralCode, address onBehalfOf)public {
+    function borrow(address asset, uint256 amount, uint256 interestRateMode)public {
+        if(debt[msg.sender] > 0) revert YouAlreadyHaveDebt();
+
+        if (asset[msg.sender]>amount * 125*10**16){
+            //collateral[msg.sender]+=amount*125/100;
+            collateral[msg.sender]+=amount * 125*10**16;
+            //asset[msg.sender]-=amount*125/100;
+            asset[msg.sender]-=amount * 125*10**16;
             debt[msg.sender]+=amount;
-            payable[msg.sender].transfer(amount);
+            //payable[msg.sender].transferFrom(msg.sender, address(this),amount);
+            borrowTimestamps[msg.sender] = block.timestamp;
+            msg.sender.transferFrom(msg.sender, address(this),amount);
         }
     }
     function repay(address asset, uint256 amount, uint256 rateMode, address onBehalfOf)payable public {
         if(debt<amount){
             revert DebtIsLower();
         }
+        //APLICAR RATES??
         debt[msg.sender]-=amount;
-        collateral[msg.sender]*125/100-=amount
+        collateral[msg.sender]-=amount * 125*10**16
+        //NECESITO APPROVE??
+        msg.sender.transferFrom(address(this),msg.sender,amount);
 
     }
+
+    function updateBalance public returns(uint256){
+        uint256 timeElapsed = block.timestamp - lastUpdatedTimestamp;
+            if(timeElapsed > 0){
+                rate = interestRate.getInterestRate();
+                //ASI o asi: uint256 interest = principal * interestRate * timeElapsed;
+                interest = asset[msg.sender] * rate / timeElapsed;
+                asset[msg.sender] += interest
+                return asset[msg.sender]  
+        }
+            }
+    }
+
     function swapBorrowRateMode(address asset, uint256 rateMode) public {
 
     }
