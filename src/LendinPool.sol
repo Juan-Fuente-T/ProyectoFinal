@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 //import {IERC20} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
 //import {ERC20} from "./libraries/ERC20.sol";
-import {AggregatorV3Interface} from "./libraries/AggregatorV3Interface.sol";
+//import {AggregatorV3Interface} from "./libraries/AggregatorV3Interface.sol";
 import {aToken} from "./aToken.sol";
 import { getInterestRate } from "./InterestRates.sol";
 
@@ -33,6 +33,7 @@ contract LendingPool{
     mapping(address => uint256) debt;
     mapping(address => uint256) collateral;
     mapping(address => uint256) depositTime;
+    mapping(address => uint256) borrowTimestamp;
 
     error ItCantBeZero();
     error InsufficientFunds();
@@ -60,6 +61,19 @@ contract LendingPool{
         updatePrincipal();
     }
 
+    function updatePrincipal public returns(uint256){
+        uint256 timeElapsed = block.timestamp - depositTime;
+        if(timeElapsed > 0){
+            rate = interestRate.getInterestRate();
+            //ASI o asi?: uint256 interest = principal * interestRate / timeElapsed;
+            uint256 interest = asset[msg.sender] * rate * timeElapsed;
+            asset[msg.sender] += interest
+            depositTime[asset] = block.timestamp;
+    }
+        return asset[msg.sender]  
+        }
+    }
+
     function withdraw(address asset, uint256 amount, address to) public{
         ///CEI: Checks, Effects, Interactions
         if (amount > asset[msg.sender]){
@@ -74,6 +88,8 @@ contract LendingPool{
     //function borrow(address asset, uint256 amount, uint256 interestRateMode, uint16 referralCode, address onBehalfOf)public {
     function borrow(address asset, uint256 amount, uint256 interestRateMode)public {
         if(debt[msg.sender] > 0) revert YouAlreadyHaveDebt();
+            updateBorrow();
+            borrowTimestamp[msg.sender] = block.timestamp;
 
         if (asset[msg.sender]>amount * 125*10**16){
             //collateral[msg.sender]+=amount*125/100;
@@ -81,11 +97,25 @@ contract LendingPool{
             //asset[msg.sender]-=amount*125/100;
             asset[msg.sender]-=amount * 125*10**16;
             debt[msg.sender]+=amount;
+
             //payable[msg.sender].transferFrom(msg.sender, address(this),amount);
-            borrowTimestamps[msg.sender] = block.timestamp;
             msg.sender.transferFrom(msg.sender, address(this),amount);
         }
     }
+
+    function updateBorrow public returns(uint256){
+        uint256 timeElapsed = block.timestamp - borrowTimestamp[msg.sender];
+        if(timeElapsed > 0){
+            rate = interestRate.getInterestBorrow();
+            //ASI o asi?: uint256 interest = principal * interestRate / timeElapsed;
+            uint256 interest = debt[msg.sender] * rate * timeElapsed;
+            debt[msg.sender] += interest
+            borrowTimestamp[msg.sender] = block.timestamp;
+    }
+        return debt[msg.sender]  
+        }
+    
+
     function repay(address asset, uint256 amount, uint256 rateMode, address onBehalfOf)payable public {
         if(debt<amount){
             revert DebtIsLower();
@@ -98,18 +128,6 @@ contract LendingPool{
 
     }
 
-    function updatePrincipal public returns(uint256){
-        uint256 timeElapsed = block.timestamp - depositTime;
-            if(timeElapsed > 0){
-                rate = interestRate.getInterestRate();
-                //ASI o asi?: uint256 interest = principal * interestRate * timeElapsed;
-                uint256 interest = asset[msg.sender] * rate / timeElapsed;
-                asset[msg.sender] += interest
-                depositTime = block.timestamp;
-        }
-            return asset[msg.sender]  
-            }
-    }
 
     function swapBorrowRateMode(address asset, uint256 rateMode) public {
 
