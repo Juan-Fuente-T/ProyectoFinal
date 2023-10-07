@@ -57,6 +57,7 @@ contract LendingPool{
         //HAY QUE MINTEAR TOKENS
         aTokenInstance.mint(msg.sender, amount);
         
+        updatePrincipal();
     }
 
     function withdraw(address asset, uint256 amount, address to) public{
@@ -97,15 +98,16 @@ contract LendingPool{
 
     }
 
-    function updateBalance public returns(uint256){
-        uint256 timeElapsed = block.timestamp - lastUpdatedTimestamp;
+    function updatePrincipal public returns(uint256){
+        uint256 timeElapsed = block.timestamp - depositTime;
             if(timeElapsed > 0){
                 rate = interestRate.getInterestRate();
-                //ASI o asi: uint256 interest = principal * interestRate * timeElapsed;
-                interest = asset[msg.sender] * rate / timeElapsed;
+                //ASI o asi?: uint256 interest = principal * interestRate * timeElapsed;
+                uint256 interest = asset[msg.sender] * rate / timeElapsed;
                 asset[msg.sender] += interest
-                return asset[msg.sender]  
+                depositTime = block.timestamp;
         }
+            return asset[msg.sender]  
             }
     }
 
