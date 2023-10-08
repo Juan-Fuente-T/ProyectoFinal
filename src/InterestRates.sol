@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 //Se importa el contrato del oráculo de  Chainlink
-//import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import {AggregatorV3Interface} from "./libraries/AggregatorV3Interface.sol";
 
 contract InterestRates {
@@ -15,8 +14,8 @@ contract InterestRates {
 
 
     //address oracle rates feeds chainlink 
-    //address _priceFeed = 0xceA6Aa74E6A86a7f85B571Ce1C34f1A60B77CD29
-    //adrres _borrowPriceFeed =
+    //address _priceFeed(ETH staking ATR?) = 0xceA6Aa74E6A86a7f85B571Ce1C34f1A60B77CD29
+    //adrres _borrowPriceFeed (BTC week Curve 2) = 0x39545d0c11CD62d787bB971B6a802150e1f54D8f
 
     constructor(address _priceFeed, address _borrowPriceFeed){
         priceFeed = AggregatorV3Interface(_priceFeed);

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-//import {IERC20} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
 //import {ERC20} from "./libraries/ERC20.sol";
 //import {AggregatorV3Interface} from "./libraries/AggregatorV3Interface.sol";
 import {aToken} from "./aToken.sol";
 import { getInterestRate } from "./InterestRates.sol";
+import { PriceOracle } from "./PriceOracle.sol";
 
 //COSAS A MEJORAR O EN QUE PENSAR
 //-Añadir EMIT, deposit, wihtdraw, borrow y repay
@@ -13,7 +13,7 @@ import { getInterestRate } from "./InterestRates.sol";
 //-Añadir Intereses / Timestamp?
 //-¿Añadir balanceOf() a aToken.sol?
 
-//DUDAS:- ¿Por que no tener una direccion guardada en el contrato, por ejemplo del oraculo, y tener que estar metiendola con el constructor?? ///¿Tengo que tener los contratos ERC20 (o los que importe) fisicamente en mi respositorio, no? Tengo que importar mi propio archivo aToken.sol,no?///  ¿Si para devolver deuda con Repay se envia más dinero del que hay, que ocurre? AAVE no controla que no se exceda. 
+//DUDAS:- Problema PANIK con Foundry//Hay chainlink Feed Registry para sepolia?? ///  ¿Si para devolver deuda con Repay se envia más dinero del que hay, que ocurre? AAVE no controla que no se exceda. ///Cuantas monedas puedo usar en Sepolia? ETH, BTC, LINK, el resto son USD??? 
 
 
 contract LendingPool{
@@ -46,6 +46,9 @@ contract LendingPool{
     function setInterestRate(address _interestRate) external{
         interestRate = _interestRate;
     }
+    function setPriceOracle(address _priceOracle) external{
+        priceOracle = _priceOracle;
+    }
 
     //function deposit(address asset, uint256 amount, address onBehalfOf, uint256 referralCode) payable public{
     function deposit(address asset, uint256 amount) payable public{
@@ -54,6 +57,9 @@ contract LendingPool{
         ///CEI: Checks, Effects, Interactions
         if (amount == 0){
             revert ItCantBeZero();
+        if (msg.value == BTC){
+            priceOracle.getBTC_ETHPrice()
+        }
         asset[msg.sender] += amount;
         //HAY QUE MINTEAR TOKENS
         aTokenInstance.mint(msg.sender, amount);
