@@ -9,46 +9,105 @@ import {FeedRegistryInterface} from "./libraries/FeedRegistryInterface.sol";
 
 
 contract PriceOracle {
-    uint256 public ETH_BTCPrice;
+    address public immutable ethContractAddress;
+    address public immutable btcContractAddress;
+    address public immutable linkContractAddress;
+    address public immutable usdtContractAddress;
+    address public immutable adaContractAddress
+
+
     uint256 public BTC_ETHPrice;
+    uint256 public ETH_BTCPrice;
     uint256 public LINK_ETHPrice;
     uint256 public ETH_LINKPrice;
+    uint256 public USDT_ETHPrice;
+    uint256 public ETH_USDTPrice;
+    uint256 public ADA_ETHPrice;
+    uint256 public ETH_ADAPrice;
 
 
-    FeedRegistryInterface internal immutable priceFeedETH_BTC;
     FeedRegistryInterface internal immutable priceFeedBTC_ETH;
+    FeedRegistryInterface internal immutable priceFeedETH_BTC;
     FeedRegistryInterface internal immutable priceFeedLINK_ETH;
     FeedRegistryInterface internal immutable priceFeedETH_LINK;
+    FeedRegistryInterface internal immutable priceFeedUSDT_ETH;
+    FeedRegistryInterface internal immutable priceFeedETH_USDT;
+    FeedRegistryInterface internal immutable priceFeedADA_ETH;
+    FeedRegistryInterface internal immutable priceFeedETH_ADA;
 
-
-    constructor(address _priceFeedETH_BTC, address _priceFeedBTC_ETH, address _piceFeedLINK_ETH,address _piceFeedETH_LINK){
-        priceFeedETH_BTC = FeedRegistryInterface(_priceFeedETH_BTC);
+    
+    constructor(
+        address _priceFeedBTC_ETH, 
+        address _priceFeedETH_BTC, 
+        address _priceFeedLINK_ETH,
+        address _priceFeedETH_LINK,
+        address _priceFeedUSDT_ETH,
+        address _priceFeedETH_USDT,
+        address _priceFeedADA_ETH,
+        address _priceFeedETH_ADA,
+        address _ethContractAddress,
+        address _btcContractAddress,
+        address _linkContractAddress,
+        address _usdtContractAddress,
+        address _adaContractAddress
+        ){
         priceFeedBTC_ETH = FeedRegistryInterface(_priceFeedBTC_ETH);
+        priceFeedETH_BTC = FeedRegistryInterface(_priceFeedETH_BTC);
         priceFeedLINK_ETH= FeedRegistryInterface(_priceFeedLINK_ETH);
         priceFeedETH_LINK= FeedRegistryInterface(_priceFeedETH_LINK);
+        priceFeedUSDT_ETH= FeedRegistryInterface(_priceFeedLINK_ETH);
+        priceFeedETH_USDT= FeedRegistryInterface(_priceFeedETH_LINK);
+        priceFeedADA_ETH= FeedRegistryInterface(_priceFeedLINK_ETH);
+        priceFeedETH_ADA= FeedRegistryInterface(_priceFeedETH_LINK);
+        ethContractAddress = _ethContractAddress;
+        btcContractAddress = _btcContractAddress;
+        linkContractAddress = _linkContractAddress;
+        usdtContractAddress = _usdtContractAddress;
+        adaContractAddress = _adaContractAddress;
+
     }
 
+    function getBTC_ETHPrice() public view returns(uint256){
+        (, int256 btc_ethPrice, , , ) = priceFeedBTC_ETH.latestRoundData(btcContractAddress, ethContractAddress);
+        BTC_ETHPrice = uint256(btc_ethPrice);
+        return BTC_ETHPrice;
+    }
     function getETH_BTCPrice() public view returns(uint256){
-        (, int256 eth_btcPrice, , , ) = priceFeedETH_BTC.latestRoundData(ETH, BTC);
+        (, int256 eth_btcPrice, , , ) = priceFeedETH_BTC.latestRoundData(ethContractAddress, btcContractAddress);
         ETH_BTCPrice= uint256(eth_btcPrice);
         return ETH_BTCPrice;
     }
 
-    function getBTC_ETHPrice() public view returns(uint256){
-        (, int256 btc_ethPrice, , , ) = priceFeedBTC_ETH.latestRoundData(BTC, ETH);
-        BTC_ETHPrice = uint256(btc_ethPrice);
-        return BTC_ETHPrice;
-    }
 
     function getLINK_ETHPrice() public view returns(uint256){
-        (, int256 link_ethPrice, , , ) = priceFeedLINK_ETH.latestRoundData(LINK, ETH);
+        (, int256 link_ethPrice, , , ) = priceFeedLINK_ETH.latestRoundData(linkContractAddress, ethContractAddress);
         LINK_ETHPrice = uint256(link_ethPrice);
         return LINK_ETHPrice;
     }
     function getETH_LINKPrice() public view returns(uint256){
-        (, int256 eth_linkPrice, , , ) = priceFeedETH_LINK.latestRoundData(ETH, LINK);
+        (, int256 eth_linkPrice, , , ) = priceFeedETH_LINK.latestRoundData(ethContractAddress, linkContractAddress);
         ETH_LINKPrice = uint256(eth_linkPrice);
         return ETH_LINKPrice;
+    }
+    function getUSDT_ETHPrice() public view returns(uint256){
+        (, int256 usdt_ethPrice, , , ) = priceFeedUSDT_ETH.latestRoundData(usdtContractAddress, ethContractAddress);
+        USDT_ETHPrice = uint256(usdt_ethPrice);
+        return USDT_ETHPrice;
+    }
+    function getETH_USDTPrice() public view returns(uint256){
+        (, int256 eth_usdtPrice, , , ) = priceFeedETH_USDT.latestRoundData(ethContractAddress, usdtContractAddress);
+        ETH_USDTPrice = uint256(eth_usdtPrice);
+        return ETH_USDTPrice;
+    }
+    function getADA_ETHPrice() public view returns(uint256){
+        (, int256 ada_ethPrice, , , ) = priceFeedADA_ETH.latestRoundData(adaContractAddress, ethContractAddress);
+        ADA_ETHPrice = uint256(ada_ethPrice);
+        return ADA_ETHPrice;
+    }
+    function getETH_ADAPrice() public view returns(uint256){
+        (, int256 eth_adaPrice, , , ) = priceFeedETH_ADA.latestRoundData(ethContractAddress, adaContractAddress);
+        ETH_ADAPrice = uint256(eth_adaPrice);
+        return ETH_ADAPrice;
     }
 
 }

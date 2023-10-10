@@ -9,7 +9,7 @@ contract AToken is ERC20{
     address public immutable lendingPool;
 
     constructor(address _lendingPool)
-        ERC20("RéplicaAaveToken", "aToken", 18)
+        ERC20("ReplicaAaveToken", "aToken", 18)
     {
         lendingPool = _lendingPool;
     }

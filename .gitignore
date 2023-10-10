@@ -11,6 +11,7 @@ out/
 docs/
 cosas_necesarias.txt
 trastos.sol
+loanPool.sol
 
 # Dotenv file
 .env
