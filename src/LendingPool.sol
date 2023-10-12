@@ -3,32 +3,46 @@ pragma solidity ^0.8.13;
 
 //import {ERC20} from "./libraries/ERC20.sol";
 //import {AggregatorV3Interface} from "./libraries/AggregatorV3Interface.sol";
-import {aToken} from "./aToken.sol";
-import { getInterestRate } from "./InterestRates.sol";
+import {AToken} from "./aToken.sol";
+import {ATokenDebt} from "./aTokenDebt.sol";
+import { InterestRates } from "./InterestRates.sol";
 import { PriceOracle } from "./PriceOracle.sol";
 
 //COSAS A MEJORAR O EN QUE PENSAR
 //-Añadir EMIT, deposit, wihtdraw, borrow y repay
-//-Como llamar a las funciones mint y burn desde LendingPool?
-//-Añadir Intereses / Timestamp?
+
+//-Añadir Intereses / Timestamp? CREO QUE YA ESTA Bien, comprobar los calculos
+
 //-¿Añadir balanceOf() a aToken.sol?
-//-Usar TransferFrom y ¿bool sent? y aprove
-//-Ya no necesito todas las direcciones de los ethContractAddress, etc.Chequear aqui y en priceOracle que se borren. 
 
-//DUDAS:- Problema PANIK con Foundry//Hay chainlink Feed Registry para sepolia?? ///  ¿Si para devolver deuda con Repay se envia más dinero del que hay, que ocurre? AAVE no controla que no se exceda. ///Cuantas monedas puedo usar en Sepolia? ETH, BTC, LINK, el resto son USD??? 
+//-Permit o aprove para transferfrom?
+//-Comprobar que se ha hecho bien el transferForm, (bool sent)
 
-interface IaToken {
-    function mint(address user, uint256 amount); 
-    function burn(address user, uint256 amount);
+
+//DUDAS: ¿Si para devolver deuda con Repay se envia más dinero del que hay, que ocurre? AAVE no controla que no se exceda. ///Cuantas monedas puedo usar en Sepolia? ETH, BTC, LINK, el resto son USD??? 
+
+//interface combinada para usar con aToken y aTokenDebt
+interface ICombinedToken{
+    function mint(address user, uint256 amount) external; 
+    function burn(address user, uint256 amount) external;
+    function transferFrom(address from,address to,uint256 amount) external returns (bool);
+    function permit(
+        address owner,
+        address spender,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
 }
 
 contract LendingPool{
     struct Pool{
-        mapping (address => uint256) balances;
-        uint256 totalSupply;
         uint256 poolId;
+        uint256 totalSupply;
     }
-    Pool[] public assets;
+   
     //Pool storage pool = assets[poolId];
     //mapping (uint256 => Pool) public assets;
 
@@ -42,10 +56,15 @@ contract LendingPool{
     address usdtContractAddress = priceOracle.usdtContractAddress();
     address adaContractAddress = priceOracle.adaContractAddress();*/
 
-    address public owner;
-    address public aToken;
+    address owner;
+    ICombinedToken public aToken;
+    ICombinedToken public aTokenDebt;
+    InterestRates public interestRates;
+    PriceOracle public priceOracle;
     uint256 rate;
     uint256 LTV = 75 * 10 ** 16;
+    
+    
     /*uint256 ethPool;
     uint256 btcPool;
     uint256 linkPool;
@@ -56,12 +75,11 @@ contract LendingPool{
         require (msg.sender == owner, "Only the owner can do this");
         _;
     }
-    function createPool(uint256 _poolId, uint256 _initialSupply) public onlyOwner{
-        Pool memory newPool = Pool({
-        poolId : _poolId,
-        totalSupply : _initialSupply;
-        })
-        assets.push(newPool);
+    function createPool(uint256 _poolId, uint256 _initialSupply) public onlyOwner {
+        Pool storage pool = assets[_poolId];
+        pool.totalSupply = _initialSupply;
+        //pool.balances[msg.sender];
+        //assets[_poolId] = newPool;
     }
     constructor(){
         owner = msg.sender;        
@@ -72,12 +90,18 @@ contract LendingPool{
         createPool(5, 1000);   
     }
 
-    /*uint256 priceFeedETH_BTC;
+    uint256 priceFeedETH_BTC;
     uint256 priceFeedBTC_ETH;
     uint256 priceFeedLINK_ETH;
-    uint256 priceFeedETH_LINK;*/
+    uint256 priceFeedETH_LINK;
+    uint256 priceFeedUSDT_ETH;
+    uint256 priceFeedETH_USDT;
+    uint256 priceFeedADA_ETH;
+    uint256 priceFeedETH_ADA;
 
-    //mapping(address => uint256) asset;
+    
+    mapping(uint256 => Pool)assets;
+    mapping (address => uint256) balances;
     mapping(address => uint256) debt;
     mapping(address => uint256) collateral;
     mapping(address => mapping(uint256 => uint256)) depositTimestamp;
@@ -92,24 +116,25 @@ contract LendingPool{
         owner = newOwner;
     }
 
-    function setToken(address _aToken) external{
-        aToken = IaToken(_aToken);
+    function setTokens(address _aToken, address _aTokenDebt) public{
+        aToken = ICombinedToken(_aToken);
+        aTokenDebt = ICombinedToken(_aTokenDebt);
     }
-    function setInterestRate(address _interestRate) external{
-        interestRate = _interestRate;
+    function setInterestRates(address _interestRates) public{
+        interestRates = InterestRates(_interestRates);
     }
-    function setPriceOracle(address _priceOracle) external{
-        priceOracle = _priceOracle;
+    function setPriceOracle(address _priceOracle) public{
+        priceOracle = PriceOracle(_priceOracle);
     }
 
-    function checkBalances(address user, uint256 poolId) internal view returns(uint256){
-        Pool memory pool = assets[poolId];
-        if (pool.balance[user] > 0){
-            return return.pool.balances[user]
+    /*function checkBalances(address user, uint256 poolId) internal view returns(uint256){
+        Pool storage pool = assets[poolId];
+        if (pool.balances[user] > 0){
+            return pool.balances[user];
         }else{
             return 0;
         }
-    }
+    }*/
 
     //function deposit(address asset, uint256 amount, address onBehalfOf, uint256 referralCode) payable public{
     function deposit(uint256 poolId, uint256 amount) payable public{
@@ -117,98 +142,100 @@ contract LendingPool{
         if (amount == 0){
             revert ItCantBeZero();
         }
-        if (!(checkBalances(msg.sender, poolId) > 0)){
+        if (!(balances[msg.sender] > 0)){
             depositTimestamp[msg.sender][poolId] = uint256(block.timestamp);
         }
     
-        updatePrincipal();
+        updatePrincipal(poolId);
 
-        if (poolid == 1){
-            priceFeedBTC_ETH = priceOracle.getBTC_ETHPrice()
+        if (poolId == 1){
+            priceFeedBTC_ETH = priceOracle.getBTC_ETHPrice();
             uint256 amountAToken = amount * priceFeedBTC_ETH;
             aToken.mint(msg.sender, amountAToken);
+            assets[poolId].totalSupply += amount; 
 
         }
-        pool.totalSuppy += amount;
         
-        pool.balances[msg.sender] += amount;
+        balances[msg.sender] += amount;
     }
     //Como calcular actualizar los intereses? Si se llama a la funcion updatePrincipal() despues del deposit, puede pasar, por ejemplo, un año y al hacer deposit de nuevo y no se habrán actualizado los intereses. Si se usa la funcion antes del propio deposit
-    function updatePrincipal() public returns(uint256){
+    function updatePrincipal(uint256 poolId) public returns(uint256){
         uint256 timeElapsed = block.timestamp - depositTimestamp[msg.sender][poolId];
         if(timeElapsed > 0){
-            rate = interestRate.getInterestRate();
+            rate = interestRates.getInterestRate();
             //ASI o asi?: uint256 interest = principal * interestRate / timeElapsed;
 
             //CUIDADO QUE SON SEGUNDOS
-            uint256 interest = pool.balances[msg.sender] * rate * timeElapsed;
-            pool.balances[msg.sender] += interest;
+            uint256 interest = balances[msg.sender] * rate * timeElapsed;
+            balances[msg.sender] += interest;
             depositTimestamp[msg.sender][poolId] = block.timestamp;
         }
-        return pool.balances[msg.sender]  
+        return balances[msg.sender];  
     }
     
 
     function withdraw(uint256 poolId, uint256 amount) public{
-        upddatePrincipal();
+        updatePrincipal(poolId);
 
         ///CEI: Checks, Effects, Interactions
-        if (amount > pool.balance[msg.sender]){
+        if (amount > balances[msg.sender]){
             revert InsufficientFunds();
         }
         //HAY QUE QUEMAR TOKENS
         aToken.burn(msg.sender, amount);
-        pool.balance[msg.sender] -= amount;
-        msg.sender.transferFrom(msg.sender, address(this),amount);
-        
+        aToken.transferFrom(address(this), msg.sender,amount);
         //CUIDADO QUE SON TOKENS; NO ETHER
+        balances[msg.sender] -= amount;
+        assets[poolId].totalSupply -= amount;
     }
 
     //function borrow(address asset, uint256 amount, uint256 interestRateMode, uint16 referralCode, address onBehalfOf)public {
     function borrow(uint256 poolId, uint256 amount)public {
         if(debt[msg.sender] > 0) revert YouAlreadyHaveDebt();
-            updateBorrow();
+            updateBorrow(poolId);
             borrowTimestamp[msg.sender][poolId]= block.timestamp;
 
-        if (pool.balances[msg.sender]>amount * 125 * 10**16){
+        if (balances[msg.sender] > amount * 125 * 10**16){
             //collateral[msg.sender]+=amount*125/100;
-            collateral[msg.sender]+=amount * 125 * 10**16;
+            collateral[msg.sender] += amount * 125 * 10**16;
             //asset[msg.sender]-=amount*125/100;
-            pool.balances[msg.sender]-=amount * 125*10**16;
+            balances[msg.sender] -= amount * 125*10**16;
             debt[msg.sender]+=amount;
+            assets[poolId].totalSupply -= amount;
 
             //payable[msg.sender].transferFrom(msg.sender, address(this),amount);
 
             //CUIDADO QUE SON TOKENS; NO ETHER
-            msg.sender.transferFrom(msg.sender, address(this),amount);
+            aTokenDebt.transferFrom(address(this), msg.sender,amount);
         }
     }
 
-    function updateBorrow() public returns(uint256){
-        uint256 timeElapsed = block.timestamp - depositTimestamp[debt[msg.sender]]
+    function updateBorrow(uint256 poolId) public returns(uint256){
+        uint256 timeElapsed = block.timestamp - borrowTimestamp[msg.sender][poolId];
         if(timeElapsed > 0){
-            rate = interestRate.getInterestBorrow();
+            rate = interestRates.getInterestBorrow();
             //ASI o asi?: uint256 interest = principal * interestRate / timeElapsed;
             uint256 interest = debt[msg.sender] * rate * timeElapsed; //CUIDADO, SON SEGUNDOS
-            debt[msg.sender] += interest
+            debt[msg.sender] += interest;
             borrowTimestamp[msg.sender][poolId] = block.timestamp;
     }
-        return debt[msg.sender]  
+        return debt[msg.sender];  
         }
     
 
     function repay(uint256 poolId, uint256 amount)payable public {
-        updateBorrow();
+        updateBorrow(poolId);
 
-        if(debt < amount){
+        if(debt[msg.sender] < amount){
             revert DebtIsLower();
         }
 
-        debt[msg.sender]-=amount;
-        collateral[msg.sender]-=amount * 125*10**16
+        debt[msg.sender] -= amount;
+        collateral[msg.sender] -= amount * 125 * 10**16;
+        balances[msg.sender] += amount * 125 * 10**16;
         //NECESITO APPROVE??
-        msg.sender.transferFrom(address(this),msg.sender,amount);
-
+        aTokenDebt.burn(msg.sender, amount);
+        //msg.sender.transferFrom(address(this),msg.sender,amount);
     }
 }
 

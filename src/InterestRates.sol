@@ -19,16 +19,16 @@ contract InterestRates {
 
     constructor(address _priceFeed, address _borrowPriceFeed){
         priceFeed = AggregatorV3Interface(_priceFeed);
-        borrowPriceFeed = AggregatorV3Interface(_borrowPriceFeed)
+        borrowPriceFeed = AggregatorV3Interface(_borrowPriceFeed);
     }
 
-    function getInterestRate() public view returns(uint256){
+    function getInterestRate() public  returns(uint256){
         (, int256 answer, , , ) = priceFeed.latestRoundData();
         interestRate = uint256(answer);
         return interestRate;
     }
-    function getInterestBorrow() public view return(uint256){
-        (, int256 answer, , , ) = borrowPricefeed.latestRoundData();
+    function getInterestBorrow() public  returns(uint256){
+        (, int256 answer, , , ) = borrowPriceFeed.latestRoundData();
         borrowInterestRate = uint256(answer);
         return borrowInterestRate;
     }

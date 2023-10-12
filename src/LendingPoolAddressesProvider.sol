@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-contract LendingPoolAddressesProvider{
+/*contract LendingPoolAddressesProvider{
     //metodos
     function getMarketId() //devuelve un string con el Id
 
@@ -25,4 +25,4 @@ contract LendingPoolAddressesProvider{
     
     function getAddress(bytes32 id) //devuelve la direccion asociada al id
 
-}
+}*/
