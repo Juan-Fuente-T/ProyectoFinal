@@ -9,17 +9,20 @@ import { InterestRates } from "./InterestRates.sol";
 import { PriceOracle } from "./PriceOracle.sol";
 
 //COSAS A MEJORAR O EN QUE PENSAR
-//-Añadir EMIT, deposit, wihtdraw, borrow y repay
 
+
+//MANEJAR Deadline de permit en la INTERFAZ del user
+//EN PERMIT hay datos concretos temporalmente: deadline, v,r,s
 //-Añadir Intereses / Timestamp? CREO QUE YA ESTA Bien, comprobar los calculos
 
-//-¿Añadir balanceOf() a aToken.sol?
-
-//-Permit o aprove para transferfrom?
-//-Comprobar que se ha hecho bien el transferForm, (bool sent)
+//-¿Añadir balanceOf() a aToken.sol??
 
 
-//DUDAS: ¿Si para devolver deuda con Repay se envia más dinero del que hay, que ocurre? AAVE no controla que no se exceda. ///Cuantas monedas puedo usar en Sepolia? ETH, BTC, LINK, el resto son USD??? 
+
+
+//DUDAS: -ORDEN de las cosas, que va primero, event, constructor, variables, modifier, mappings, errors???? // ¿Si para devolver deuda con Repay se envia más dinero del que hay, que ocurre? AAVE no controla que no se exceda. ///Cuantas monedas puedo usar en Sepolia? ETH, BTC, LINK, el resto son USD??? 
+//Direcciones para intereses. DEPOSIT STAKE Eth Staking ATR??
+//BORROW BTC week Curve 2??
 
 //interface combinada para usar con aToken y aTokenDebt
 interface ICombinedToken{
@@ -112,6 +115,11 @@ contract LendingPool{
     error DebtIsLower();
     error YouAlreadyHaveDebt();
 
+    event Deposit(address indexed user, uint256 amount);
+    event Withdraw(address indexed user, uint256 amount);
+    event Borrow(address indexed user, uint256 amount);
+    event Repay(address indexed user, uint256 amount);
+
     function setOwner(address newOwner) public onlyOwner{
         owner = newOwner;
     }
@@ -139,9 +147,11 @@ contract LendingPool{
     //function deposit(address asset, uint256 amount, address onBehalfOf, uint256 referralCode) payable public{
     function deposit(uint256 poolId, uint256 amount) payable public{
         ///CEI: Checks, Effects, Interactions
+        // Se verifica que el monto sea menor o igual a los fondos disponibles
         if (amount == 0){
             revert ItCantBeZero();
         }
+
         if (!(balances[msg.sender] > 0)){
             depositTimestamp[msg.sender][poolId] = uint256(block.timestamp);
         }
@@ -156,6 +166,7 @@ contract LendingPool{
 
         }
         
+        emit Deposit(msg.sender, amount);
         balances[msg.sender] += amount;
     }
     //Como calcular actualizar los intereses? Si se llama a la funcion updatePrincipal() despues del deposit, puede pasar, por ejemplo, un año y al hacer deposit de nuevo y no se habrán actualizado los intereses. Si se usa la funcion antes del propio deposit
@@ -178,15 +189,28 @@ contract LendingPool{
         updatePrincipal(poolId);
 
         ///CEI: Checks, Effects, Interactions
+
+        // Se verifica que el monto sea menor o igual a los fondos disponibles, en caso contrario se cancela la transaccion
         if (amount > balances[msg.sender]){
             revert InsufficientFunds();
         }
-        //HAY QUE QUEMAR TOKENS
+        // Se queman tokens aToken del usuario
         aToken.burn(msg.sender, amount);
-        aToken.transferFrom(address(this), msg.sender,amount);
-        //CUIDADO QUE SON TOKENS; NO ETHER
+    
+        // Se llama a la función permit para permitir el gasto desde el contrato
+        //aToken.permit(address(this), msg.sender, amount, deadline, v, r, s);
+        aToken.permit(address(this), msg.sender, amount, 0, 0, bytes32(0), bytes32(0));
+
+        // Se actualiza los balances y el suministro total
         balances[msg.sender] -= amount;
         assets[poolId].totalSupply -= amount;
+
+        //Se emite la notificacion del evento
+        emit Withdraw(msg.sender, amount);
+
+        // Se realiza la transferencia de tokens desde el contrato al usuario
+        bool sent = aToken.transferFrom(address(this), msg.sender,amount);
+        require(sent, "Wihtdraw failed");
     }
 
     //function borrow(address asset, uint256 amount, uint256 interestRateMode, uint16 referralCode, address onBehalfOf)public {
@@ -199,14 +223,17 @@ contract LendingPool{
             //collateral[msg.sender]+=amount*125/100;
             collateral[msg.sender] += amount * 125 * 10**16;
             //asset[msg.sender]-=amount*125/100;
+            emit Borrow(msg.sender, amount);
             balances[msg.sender] -= amount * 125*10**16;
             debt[msg.sender]+=amount;
             assets[poolId].totalSupply -= amount;
 
             //payable[msg.sender].transferFrom(msg.sender, address(this),amount);
-
+            //aTokenDebt.permit(address(this), msg.sender, amount, deadline, v, r, s);
+            aTokenDebt.permit(address(this), msg.sender, amount, 0, 0, bytes32(0), bytes32(0));
             //CUIDADO QUE SON TOKENS; NO ETHER
-            aTokenDebt.transferFrom(address(this), msg.sender,amount);
+            bool sent = aTokenDebt.transferFrom(address(this), msg.sender,amount);
+            require(sent, "Borrow failed");
         }
     }
 
@@ -229,12 +256,12 @@ contract LendingPool{
         if(debt[msg.sender] < amount){
             revert DebtIsLower();
         }
-
+        emit Repay(msg.sender, amount);
         debt[msg.sender] -= amount;
         collateral[msg.sender] -= amount * 125 * 10**16;
+        aTokenDebt.burn(msg.sender, amount);
         balances[msg.sender] += amount * 125 * 10**16;
         //NECESITO APPROVE??
-        aTokenDebt.burn(msg.sender, amount);
         //msg.sender.transferFrom(address(this),msg.sender,amount);
     }
 }
