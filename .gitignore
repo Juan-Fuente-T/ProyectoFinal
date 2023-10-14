@@ -13,6 +13,7 @@ cosas_necesarias.txt
 trastos.sol
 loanPool.sol
 LendingPool - copia.sol
+EjemploMock.sol
 
 # Dotenv file
 .env
