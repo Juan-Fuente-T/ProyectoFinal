@@ -16,6 +16,7 @@ import { PriceOracle } from "./PriceOracle.sol";
 //-Añadir Intereses / Timestamp? CREO QUE YA ESTA Bien, comprobar los calculos
 
 //-¿Añadir balanceOf() a aToken.sol??
+//ACtualizar cantidades de inicio en las pool a ¿+18ceros?
 
 
 
@@ -23,6 +24,7 @@ import { PriceOracle } from "./PriceOracle.sol";
 //DUDAS: -ORDEN de las cosas, que va primero, event, constructor, variables, modifier, mappings, errors???? // ¿Si para devolver deuda con Repay se envia más dinero del que hay, que ocurre? AAVE no controla que no se exceda. ///Cuantas monedas puedo usar en Sepolia? ETH, BTC, LINK, el resto son USD??? 
 //Direcciones para intereses. DEPOSIT STAKE Eth Staking ATR??
 //BORROW BTC week Curve 2??
+//si deposit ETH puedo devolver en wihdraw wETH??
 
 //interface combinada para usar con aToken y aTokenDebt
 interface ICombinedToken{
@@ -88,9 +90,9 @@ contract LendingPool{
         owner = msg.sender;        
         createPool(0, 100);
         createPool(1, 100);
-        createPool(3, 1000);
-        createPool(4, 10000);
-        createPool(5, 1000);   
+        createPool(2, 1000);
+        createPool(3, 10000);
+        createPool(4, 1000);   
     }
 
     uint256 priceFeedETH_BTC;
@@ -169,6 +171,15 @@ contract LendingPool{
         emit Deposit(msg.sender, amount);
         balances[msg.sender] += amount;
     }
+
+        function balanceOf(address user) public view returns (uint256){
+        return balances[user];
+    }
+
+    function totalSupply(uint256 poolId) public view returns(uint256){
+        return assets[poolId].totalSupply;
+    }
+
     //Como calcular actualizar los intereses? Si se llama a la funcion updatePrincipal() despues del deposit, puede pasar, por ejemplo, un año y al hacer deposit de nuevo y no se habrán actualizado los intereses. Si se usa la funcion antes del propio deposit
     function updatePrincipal(uint256 poolId) public returns(uint256){
         uint256 timeElapsed = block.timestamp - depositTimestamp[msg.sender][poolId];

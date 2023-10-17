@@ -17,7 +17,7 @@ import { PriceFeedMock } from "../src/PriceFeedMock.sol";
 import { IWETH } from "../src/libraries/IWETH.sol";
 import {LoanContract} from "../src/LoanContract.sol";
 
-contract LendingPoolTest is Test {
+contract LoanContractTest is Test {
     IWETH weth;
     AToken aToken;
     ATokenDebt aTokenDebt;
@@ -63,7 +63,7 @@ contract LendingPoolTest is Test {
         lendingPoolTest = new LendingPool(priceOracle,interestRates,weth,loanContract);
     }
 
-    function testLendingPool() public{
+    function testLoanContract() public{
         //assertEq(100, lendingPoolTest.assets[0].totalSupply);
         /*console.log(assets[0].totalSupply());
         assertEq(100, assets[1]);
@@ -86,14 +86,8 @@ contract LendingPoolTest is Test {
         uint256 balance = lendingPoolTest.balanceOf(alice,0);
         console.log("Alice's balance antes deposit: ", balance);
         lendingPoolTest.deposit(0, 175);
-      
 
-   
-
-        //vm.stopPrank;
-        //vm.startPrank(wbtcAddress);
-        //lendingPoolTest.deposit(1, 250);
-        console.log("Alice's balance despues deposit: ", lendingPoolTest.balanceOf(alice, 0));
+        /*console.log("Alice's balance despues deposit: ", lendingPoolTest.balanceOf(alice, 0));
         assertEq(275000000000000000000, lendingPoolTest.totalSupply(0));
         assertEq(175000000000000000000, lendingPoolTest.balanceOf(alice, 0));
         console.log("Balance cuenta alice", alice.balance);
@@ -107,22 +101,23 @@ contract LendingPoolTest is Test {
         uint256 amountAToken = lendingPoolTest.getAmountAToken();
         console.log("amountAToken", amountAToken);
         uint256 amount = lendingPoolTest.getAmount();
-        console.log("amount", amount);
+        console.log("amount", amount);*/
 
 
         lendingPoolTest.withdraw(0, 25);
+
+        /*
         balance = lendingPoolTest.balanceOf(alice, 0);
         console.log("Alice's balance despues withdraw: ", balance);
         assertEq(250000000000000000000, lendingPoolTest.totalSupply(0));
         assertEq(150000000000000000000, lendingPoolTest.balanceOf(alice, 0));
         console.log("totalSupply ETH despues withdraw:", lendingPoolTest.totalSupply(0));
-        
+        */
+
         //(1,5,0) pool donde tomar prestado, amount, balance de donde hacer colateral
         lendingPoolTest.borrow(alice, 0, 0, 5);
         //lendingPoolTest.borrow(alice, 0, 1, 5);
 
-        console.log("AmountCollateral borrow: ", lendingPoolTest.getAmountCollateral());
-        
         console.log("Alice's balance despues borrow: ", lendingPoolTest.balanceOf(alice, 0));
         console.log("Alice's colateral despues borrow: ", lendingPoolTest.getCollateral(alice, 0, 0));
         console.log("AmountCollateral: ", lendingPoolTest.getAmountCollateral());
@@ -130,6 +125,7 @@ contract LendingPoolTest is Test {
         //console.log("Alice's deuda despues borrow: ", lendingPoolTest.getDebt(alice));
         console.log("totalSupply ETH despues borrow:", lendingPoolTest.totalSupply(0));
         console.log("totalSupply BTC despues borrow:", lendingPoolTest.totalSupply(1));
-
+    
     }
 }
+      

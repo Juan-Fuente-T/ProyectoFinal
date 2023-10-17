@@ -18,9 +18,9 @@ contract PriceOracle {
     address public immutable usdtContractAddress;
     address public immutable adaContractAddress;
     
-    FeedRegistryInterface internal registry;
+    FeedRegistryInterface internal  registry;
 
-    PriceFeedMock immutable priceFeedMock;
+    PriceFeedMock internal  priceFeedMock;
     /*address[] feedAddresses = (
         FeedRegistryInterface.latestRoundData(btcContractAddress, ethContractAddress),
         FeedRegistryInterface.latestRoundData(ethContractAddress, btcContractAddress),

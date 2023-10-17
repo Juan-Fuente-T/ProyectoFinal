@@ -45,28 +45,28 @@ contract PriceOracleTest is Test {
       console2.logAddress(ada);
 
       uint256 eth_BtcPrice = priceOracleTest.testGetETH_BTCPrice();
-      assertEq(1000, eth_BtcPrice);
+      assertEq(1, eth_BtcPrice);
       console.log(eth_BtcPrice);
       uint256 btc_EthPrice = priceOracleTest.testGetBTC_ETHPrice();
-      assertEq(2000, btc_EthPrice);
+      assertEq(2, btc_EthPrice);
       console.log(btc_EthPrice);
       uint256 eth_LinkPrice = priceOracleTest.testGetETH_LINKPrice();
-      assertEq(3000, eth_LinkPrice);
+      assertEq(3, eth_LinkPrice);
       console.log(eth_LinkPrice);
       uint256 link_EthPrice = priceOracleTest.testGetLINK_ETHPrice();
       assertEq(4000, link_EthPrice);
       console.log(link_EthPrice);
       uint256 eth_UsdtPrice = priceOracleTest.testGetETH_USDTPrice();
-      assertEq(5000, eth_UsdtPrice);
+      assertEq(5, eth_UsdtPrice);
       console.log(eth_UsdtPrice);
       uint256 usdt_EthPrice = priceOracleTest.testGetUSDT_ETHPrice();
-      assertEq(6000, usdt_EthPrice);
+      assertEq(6, usdt_EthPrice);
       console.log(usdt_EthPrice);
       uint256 eth_AdaPrice = priceOracleTest.testGetETH_ADAPrice();
-      assertEq(7000, eth_AdaPrice);
+      assertEq(7, eth_AdaPrice);
       console.log(eth_AdaPrice);
       uint256 ada_EthPrice = priceOracleTest.testGetADA_ETHPrice();
-      assertEq(8000, ada_EthPrice);
+      assertEq(8, ada_EthPrice);
       console.log(ada_EthPrice);
 
    

@@ -31,5 +31,9 @@ contract AToken is ERC20{
     {
         _burn(user,amount);
     }
+
+    function userBalance(address user) external returns (uint256){
+        return balanceOf[user];
+    }
     
 }

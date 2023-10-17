@@ -9,10 +9,10 @@ contract InterestRates {
     uint256 public interestRate;
     uint256 public borrowInterestRate;
 
-    PriceFeedMock immutable priceFeedMock;
+    PriceFeedMock internal priceFeedMock;
 
-    AggregatorV3Interface internal immutable priceFeed;
-    AggregatorV3Interface internal immutable borrowPriceFeed;
+    AggregatorV3Interface internal priceFeed;
+    AggregatorV3Interface internal  borrowPriceFeed;
 
 
 
