@@ -45,6 +45,10 @@ contract LendingPoolTest is Test {
         address _linkContractAddress = makeAddr("_linkContractAddress"); 
         address _usdtContractAddress = makeAddr("_usdtContractAddress"); 
         address _adaContractAddress = makeAddr("_adaContractAddress"); 
+        address _aToken = makeAddr("_aToken");
+        address _aTokenDebt = makeAddr("_aTokenDebt");
+        //forge create src/AToken.sol:ContractWithNoConstructor
+
         /*
         address _feedRegistryInterface = priceFeedMock.getPriceFeedRegistryAddress();
         address _ethContractAddress = priceFeedMock.getEthContractAddress();
@@ -61,6 +65,7 @@ contract LendingPoolTest is Test {
         interestRates = new InterestRates(eth_atr, btc_curve2, priceFeedMock);
         loanContract = new LoanContract(priceOracle, interestRates, lendingPoolTest);
         lendingPoolTest = new LendingPool(priceOracle,interestRates,weth,loanContract);
+        lendingPoolTest.setTokens(_aToken, _aTokenDebt);
     }
 
     function testLendingPool() public{

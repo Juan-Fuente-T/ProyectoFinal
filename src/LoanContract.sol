@@ -66,9 +66,10 @@ contract LoanContract{
             borrowTimestamp[msg.sender][idBorrow] = block.timestamp;
             revert YouAlreadyHaveDebt();
         }*/
-            lendingPool.increaseCollateral(msg.sender, idBorrow, poolId, amountCollateral);
-            lendingPool.decreaseBalanceOf(msg.sender,poolId, amountCollateral);
-            lendingPool.increaseDebt(msg.sender,idBorrow, poolId,amount);
+            //lendingPool.setTotalSupply(0, 3000);
+            //lendingPool.increaseCollateral(msg.sender, idBorrow, poolId, amountCollateral);
+            //lendingPool.decreaseBalanceOf(msg.sender,poolId, amountCollateral);
+            //lendingPool.increaseDebt(msg.sender,idBorrow, poolId,amount);
                         
 
 
