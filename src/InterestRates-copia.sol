@@ -33,13 +33,15 @@ contract InterestRates {
     }
 
     function getInterestRate() public  returns(uint256){
-        (, int256 answer, , , ) = priceFeed.latestRoundData();
-        interestRate = uint256(answer);
+        //(, int256 answer, , , ) = priceFeed.latestRoundData();
+        //interestRate = uint256(answer);
+        interestRate = priceFeedMock.getData();
         return interestRate;
     }
     function getInterestBorrow() public  returns(uint256){
-        (, int256 answer, , , ) = borrowPriceFeed.latestRoundData();
-        borrowInterestRate = uint256(answer);
+        //(, int256 answer, , , ) = borrowPriceFeed.latestRoundData();
+        //borrowInterestRate = uint256(answer);
+        borrowInterestRate = priceFeedMock.getDataFeedRegistry();
         return borrowInterestRate;
     }
 }

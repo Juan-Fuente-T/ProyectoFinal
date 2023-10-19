@@ -64,7 +64,7 @@ contract LendingPoolTest is Test {
         priceOracle = new PriceOracle(priceFeedMock, _feedRegistryInterface, _ethContractAddress, _btcContractAddress, _linkContractAddress, _usdtContractAddress, _adaContractAddress);
         interestRates = new InterestRates(eth_atr, btc_curve2, priceFeedMock);
         loanContract = new LoanContract(priceOracle, interestRates, lendingPoolTest);
-        lendingPoolTest = new LendingPool(priceOracle,interestRates,weth,loanContract);
+        lendingPoolTest = new LendingPool(priceOracle,interestRates,loanContract);
         lendingPoolTest.setTokens(_aToken, _aTokenDebt);
     }
 
@@ -86,55 +86,99 @@ contract LendingPoolTest is Test {
         //vm.deal(wbtcAddress, lendingPoolTest, 10);
 
         address alice = makeAddr("alice");
-        vm.deal(alice, 200 ether);
+        vm.deal(alice, 500 ether);
         vm.startPrank(alice);
         uint256 balance = lendingPoolTest.balanceOf(alice,0);
-        console.log("Alice's balance antes deposit: ", balance);
+        //console.log("Alice's balance antes deposit: ", balance);
+
         lendingPoolTest.deposit(0, 175);
       
-
-   
-
         //vm.stopPrank;
         //vm.startPrank(wbtcAddress);
         //lendingPoolTest.deposit(1, 250);
-        console.log("Alice's balance despues deposit: ", lendingPoolTest.balanceOf(alice, 0));
-        assertEq(275000000000000000000, lendingPoolTest.totalSupply(0));
+        console.log("Alice's balance antes PROBLEMA: ", lendingPoolTest.balanceOf(alice, 0));
         assertEq(175000000000000000000, lendingPoolTest.balanceOf(alice, 0));
-        console.log("Balance cuenta alice", alice.balance);
+        assertEq(275000000000000000000, lendingPoolTest.totalSupply(0));
+        
         uint256 assetTotalSupply0 = lendingPoolTest.totalSupply(0);
         uint256 assetTotalSupply1 = lendingPoolTest.totalSupply(1);
         uint256 assetTotalSupply2 = lendingPoolTest.totalSupply(2);
         uint256 assetTotalSupply3 = lendingPoolTest.totalSupply(3);
         uint256 assetTotalSupply4 = lendingPoolTest.totalSupply(4);
-        console.log("totalSupply ETH despues deposit:", assetTotalSupply0);
+        assertEq(275000000000000000000, lendingPoolTest.totalSupply(0));
+        
         console.log(assetTotalSupply1, assetTotalSupply2, assetTotalSupply3, assetTotalSupply4);
         uint256 amountAToken = lendingPoolTest.getAmountAToken();
         console.log("amountAToken", amountAToken);
         uint256 amount = lendingPoolTest.getAmount();
         console.log("amount", amount);
 
+        assertEq(175000000000000000000, lendingPoolTest.balanceOf(alice, 0));
 
         lendingPoolTest.withdraw(0, 25);
-        balance = lendingPoolTest.balanceOf(alice, 0);
-        console.log("Alice's balance despues withdraw: ", balance);
-        assertEq(250000000000000000000, lendingPoolTest.totalSupply(0));
+
         assertEq(150000000000000000000, lendingPoolTest.balanceOf(alice, 0));
-        console.log("totalSupply ETH despues withdraw:", lendingPoolTest.totalSupply(0));
+        assertEq(250000000000000000000, lendingPoolTest.totalSupply(0));
+        //console.log("totalSupply ETH despues withdraw:", lendingPoolTest.totalSupply(0));
         
-        //(1,5,0) pool donde tomar prestado, amount, balance de donde hacer colateral
-        lendingPoolTest.borrow(alice, 0, 0, 5);
-        //lendingPoolTest.borrow(alice, 0, 1, 5);
+        console.log("totalSupply BTC ANTES borrow:", lendingPoolTest.totalSupply(1));
+        console.log("totalSupply ADA ANTES borrow:", lendingPoolTest.totalSupply(4));
+        //(alice,0,1,5) pool donde coger collateral, pool de donde se quiere quitar, amount
+        lendingPoolTest.borrow(alice, 1, 0, 6);
+        lendingPoolTest.borrow(alice, 4, 0, 7);
 
         console.log("AmountCollateral borrow: ", lendingPoolTest.getAmountCollateral());
         
+        assertEq(137000000000000000000, lendingPoolTest.balanceOf(alice, 0));
+        assertEq(250000000000000000000, lendingPoolTest.totalSupply(0));
+        assertEq(6000000000000000000, lendingPoolTest.getCollateral(alice, 1));
+        assertEq(7000000000000000000, lendingPoolTest.getCollateral(alice, 4));
+        assertEq(4500000000000000000, lendingPoolTest.getDebt(alice, 1));
+        assertEq(5250000000000000000, lendingPoolTest.getDebt(alice, 4));
+
+
         console.log("Alice's balance despues borrow: ", lendingPoolTest.balanceOf(alice, 0));
-        console.log("Alice's colateral despues borrow: ", lendingPoolTest.getCollateral(alice, 0, 0));
+        console.log("Alice's colateral para BTC despues borrow: ", lendingPoolTest.getCollateral(alice, 1));
+        console.log("Alice's colateral para ADA despues borrow: ", lendingPoolTest.getCollateral(alice, 4));
         console.log("AmountCollateral: ", lendingPoolTest.getAmountCollateral());
-        console.log("Alice's deuda despues borrow: ", lendingPoolTest.getDebt(alice, 0, 0));
-        //console.log("Alice's deuda despues borrow: ", lendingPoolTest.getDebt(alice));
+        console.log("Alice's deuda BTC despues borrow: ", lendingPoolTest.getDebt(alice, 1));
+        console.log("Alice's deuda ADA despues borrow: ", lendingPoolTest.getDebt(alice, 4));
         console.log("totalSupply ETH despues borrow:", lendingPoolTest.totalSupply(0));
         console.log("totalSupply BTC despues borrow:", lendingPoolTest.totalSupply(1));
+        console.log("totalSupply ADA despues borrow:", lendingPoolTest.totalSupply(4));
 
+        lendingPoolTest.setTotalSupplyAndOthers(alice,1, 100);
+        lendingPoolTest.setTotalSupplyAndOthers(alice,4, 100);
+        //orden de parametros en BORROW, address, pool de donde se toma el borrow, balance de donde se coge el colateral, amount
+        lendingPoolTest.borrow(alice, 0, 1, 3);
+        lendingPoolTest.borrow(alice, 0, 4, 9);
+        lendingPoolTest.borrow(alice, 2, 1, 1);
+        lendingPoolTest.borrow(alice, 4, 0, 11);
+
+        //console.log("Alice's balance despues borrow: ", lendingPoolTest.balanceOf(alice, 0));
+        //assertEq(250000000000000000000, lendingPoolTest.totalSupply(0));
+        console.log("Alice's colateral para BTC despues borrow: ", lendingPoolTest.getCollateral(alice, 1));
+        console.log("Alice's colateral para ADA despues borrow: ", lendingPoolTest.getCollateral(alice, 4));
+
+        //assertEq(, lendingPoolTest.totalSupply(0));
+        //assertEq(", lendingPoolTest.totalSupply(1));
+        //assertEq(, lendingPoolTest.totalSupply(4));
+        console.log("Alice's deuda ETH despues borrow2: ", lendingPoolTest.getDebt(alice, 0));
+        console.log("Alice's deuda ADA despues borrow2: ", lendingPoolTest.getDebt(alice, 4));
+        console.log("totalSupply ETH despues borrow2:", lendingPoolTest.totalSupply(0));
+        console.log("totalSupply BTC despues borrow2:", lendingPoolTest.totalSupply(1));
+        console.log("totalSupply ADA despues borrow2:", lendingPoolTest.totalSupply(4));
+        console.log("totalSupply USDT despues borrow2:", lendingPoolTest.totalSupply(3));
+        console.log("totalSupply LINK despues borrow2:", lendingPoolTest.totalSupply(2));
+        console.log("Balance Alice BTC despues borrow2:", lendingPoolTest.balanceOf(alice, 1));
+        console.log("Balance Alice LINK despues borrow2:", lendingPoolTest.balanceOf(alice, 2));
+        console.log("totalSupply USDT despues borrow2:", lendingPoolTest.balanceOf(alice, 3));
+        console.log("Balance ALICE ADA despues borrow2:", lendingPoolTest.balanceOf(alice, 4));
+        console.log("Alice's deuda LINK despues borrow2: ", lendingPoolTest.getDebt(alice, 2));
+        console.log("Alice's colateral LINK despues borrow2: ", lendingPoolTest.getCollateral(alice, 2));
+        console.log("Alice's deuda usdt despues borrow2: ", lendingPoolTest.getDebt(alice, 3));
+        console.log("Alice's colateral usdt despues borrow2: ", lendingPoolTest.getCollateral(alice, 3));
+        console.log("PruebaUpdatePrincipalETH", lendingPoolTest.updatePrincipal(0));
+        console.log("PruebaUpdateBorrow ETH", lendingPoolTest.updateBorrow(0));
     }
 }

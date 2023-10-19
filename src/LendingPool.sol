@@ -8,6 +8,7 @@ import {ATokenDebt} from "./aTokenDebt.sol";
 import { InterestRates } from "./InterestRates.sol";
 import { PriceOracle } from "./PriceOracle.sol";
 
+
 //COSAS A MEJORAR O EN QUE PENSAR
 
 
@@ -25,7 +26,7 @@ import { PriceOracle } from "./PriceOracle.sol";
 //Direcciones para intereses. DEPOSIT STAKE Eth Staking ATR??
 //BORROW BTC week Curve 2??
 //si deposit ETH puedo devolver en wihdraw wETH??
-
+// SI EL USER DEPOSITA ETH NATIVO HE DE DEVOLVERLE ETH NATIVO, o wETH?
 //interface combinada para usar con aToken y aTokenDebt
 interface ICombinedToken{
     function mint(address user, uint256 amount) external; 

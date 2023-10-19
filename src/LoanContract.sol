@@ -122,9 +122,9 @@ contract LoanContract{
             rate = interestRates.getInterestBorrow();
             //ASI o asi?: uint256 interest = principal * interestRate / timeElapsed;
             uint256 interest = rate * timeElapsed; //CUIDADO, SON SEGUNDOS
-            lendingPool.getDebt(msg.sender, idBorrow,poolId) * interest;
+            lendingPool.getDebt(msg.sender, idBorrow) * interest;
             borrowTimestamp[msg.sender][poolId] = block.timestamp;
-            return lendingPool.getDebt(msg.sender, idBorrow,poolId) * interest;  
+            return lendingPool.getDebt(msg.sender, idBorrow) * interest;  
         }
     }
 }

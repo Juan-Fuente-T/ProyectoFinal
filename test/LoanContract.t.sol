@@ -60,7 +60,7 @@ contract LoanContractTest is Test {
         priceOracle = new PriceOracle(priceFeedMock, _feedRegistryInterface, _ethContractAddress, _btcContractAddress, _linkContractAddress, _usdtContractAddress, _adaContractAddress);
         interestRates = new InterestRates(eth_atr, btc_curve2, priceFeedMock);
         loanContract = new LoanContract(priceOracle, interestRates, lendingPoolTest);
-        lendingPoolTest = new LendingPool(priceOracle,interestRates,weth,loanContract);
+        lendingPoolTest = new LendingPool(priceOracle,interestRates,loanContract);
     }
 
     function testLoanContract() public{
@@ -119,9 +119,9 @@ contract LoanContractTest is Test {
         //lendingPoolTest.borrow(alice, 0, 1, 5);
 
         console.log("Alice's balance despues borrow: ", lendingPoolTest.balanceOf(alice, 0));
-        console.log("Alice's colateral despues borrow: ", lendingPoolTest.getCollateral(alice, 0, 0));
+        console.log("Alice's colateral despues borrow: ", lendingPoolTest.getCollateral(alice, 0));
         console.log("AmountCollateral: ", lendingPoolTest.getAmountCollateral());
-        console.log("Alice's deuda despues borrow: ", lendingPoolTest.getDebt(alice, 0, 0));
+        console.log("Alice's deuda despues borrow: ", lendingPoolTest.getDebt(alice, 0));
         //console.log("Alice's deuda despues borrow: ", lendingPoolTest.getDebt(alice));
         console.log("totalSupply ETH despues borrow:", lendingPoolTest.totalSupply(0));
         console.log("totalSupply BTC despues borrow:", lendingPoolTest.totalSupply(1));

@@ -72,11 +72,11 @@ contract PriceFeedMock{
 
     function getData() public pure returns (uint256) {
     // Devolver datos predefinidos para rates
-    return 100;
+    return 50 * 10 ** 16;
     }
     function getDataFeedRegistry() public pure returns (uint256) {
     // Devolver datos predefinidos para relacion de precios entre dos cryptomonedas
-    return 200;
+    return 75 * 10 ** 16;
     }
 }
 
