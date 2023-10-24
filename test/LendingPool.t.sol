@@ -29,7 +29,10 @@ contract LendingPoolTest is Test {
     
 
     string MAINNET_RPC_URL = 'https://eth-mainnet.g.alchemy.com/v2/x285eIv7gcffbvHwtnxjDVz6kIgwvuw3';
+    string SEPOLIA_RPC_URL = 'https://eth-sepolia.g.alchemy.com/v2/QF_rlvr4V0ZORimK7ysBA4mJvl0Bk47c';
+   
     uint256 mainnetFork;
+    uint256 sepoliaFork;
 
 
         
@@ -45,8 +48,8 @@ contract LendingPoolTest is Test {
         address _linkContractAddress = makeAddr("_linkContractAddress"); 
         address _usdtContractAddress = makeAddr("_usdtContractAddress"); 
         address _adaContractAddress = makeAddr("_adaContractAddress"); 
-        address _aToken = makeAddr("_aToken");
-        address _aTokenDebt = makeAddr("_aTokenDebt");
+        address _aToken = 0x35AAd3fD9fe3a8F1897a119fc5DaF34FB6cF4B62;
+        address _aTokenDebt = 0x3049F48d4C80cBAD467B247aFAb20FfDE451d8Af;
         //forge create src/AToken.sol:ContractWithNoConstructor
 
         /*
@@ -58,14 +61,16 @@ contract LendingPoolTest is Test {
         address _adaContractAddress = priceFeedMock.getAdaContractAddress();
        */
 
-        mainnetFork = vm.createFork(MAINNET_RPC_URL);
-        vm.selectFork(mainnetFork);
+        //mainnetFork = vm.createFork(MAINNET_RPC_URL);
+        sepoliaFork = vm.createFork(SEPOLIA_RPC_URL);
+        //vm.selectFork(mainnetFork);
+        vm.selectFork(sepoliaFork);
         priceFeedMock = new PriceFeedMock();
         priceOracle = new PriceOracle(priceFeedMock, _feedRegistryInterface, _ethContractAddress, _btcContractAddress, _linkContractAddress, _usdtContractAddress, _adaContractAddress);
         interestRates = new InterestRates(eth_atr, btc_curve2, priceFeedMock);
         loanContract = new LoanContract(priceOracle, interestRates, lendingPoolTest);
         lendingPoolTest = new LendingPool(priceOracle,interestRates,loanContract);
-        lendingPoolTest.setTokens(_aToken, _aTokenDebt);
+        //lendingPoolTest.setTokens(_aToken, _aTokenDebt);
     }
 
     function testLendingPool() public{
@@ -91,8 +96,14 @@ contract LendingPoolTest is Test {
         uint256 balance = lendingPoolTest.balanceOf(alice,0);
         //console.log("Alice's balance antes deposit: ", balance);
 
-        lendingPoolTest.deposit(0, 175);
+        lendingPoolTest.deposit(0,100);
+        lendingPoolTest.deposit(1,100);
+        lendingPoolTest.deposit(2,100);
+        lendingPoolTest.deposit(3,100);
+        lendingPoolTest.deposit(4,100);
       
+        //console.log("weth Supply",lendingPoolTest.wETHTotalSupply());
+        //console.log("weth user balance",lendingPoolTest.wETHUserBalance(alice));
         //vm.stopPrank;
         //vm.startPrank(wbtcAddress);
         //lendingPoolTest.deposit(1, 250);
@@ -115,7 +126,24 @@ contract LendingPoolTest is Test {
 
         assertEq(175000000000000000000, lendingPoolTest.balanceOf(alice, 0));
 
-        lendingPoolTest.withdraw(0, 25);
+        //lendingPoolTest.withdraw(0, 15);
+        //lendingPoolTest.withdraw(0, 10);
+
+        //user, pooid, catidadTotalSupply, cantidadUser
+        lendingPoolTest.setTotalSupplyAndOthers(alice, 1, 0, 10);
+        console.log("Fondos nuevos Alice BTC:", lendingPoolTest.balanceOf(alice, 1));
+        lendingPoolTest.setTotalSupplyAndOthers(alice, 2, 0, 10);
+        console.log("Fondos nuevos Alice Link:", lendingPoolTest.balanceOf(alice, 2));
+        lendingPoolTest.setTotalSupplyAndOthers(alice, 3, 0, 10);
+        console.log("Fondos nuevos Alice Usdt:", lendingPoolTest.balanceOf(alice, 3));
+        lendingPoolTest.setTotalSupplyAndOthers(alice, 4, 0, 10);
+        console.log("Fondos nuevos Alice ADA:", lendingPoolTest.balanceOf(alice, 4));
+        console.log("Nuevos withdraw");
+        lendingPoolTest.withdraw(1, 10);
+        lendingPoolTest.withdraw(2, 10);
+        lendingPoolTest.withdraw(3, 10);
+        lendingPoolTest.withdraw(4, 9);
+        console.log("Fin nuevos withdraw");
 
         assertEq(150000000000000000000, lendingPoolTest.balanceOf(alice, 0));
         assertEq(250000000000000000000, lendingPoolTest.totalSupply(0));
@@ -147,8 +175,8 @@ contract LendingPoolTest is Test {
         console.log("totalSupply BTC despues borrow:", lendingPoolTest.totalSupply(1));
         console.log("totalSupply ADA despues borrow:", lendingPoolTest.totalSupply(4));
 
-        lendingPoolTest.setTotalSupplyAndOthers(alice,1, 100);
-        lendingPoolTest.setTotalSupplyAndOthers(alice,4, 100);
+        lendingPoolTest.setTotalSupplyAndOthers(alice,1, 0, 100);
+        lendingPoolTest.setTotalSupplyAndOthers(alice,4, 0, 100);
         //orden de parametros en BORROW, address, pool de donde se toma el borrow, balance de donde se coge el colateral, amount
         lendingPoolTest.borrow(alice, 0, 1, 3);
         lendingPoolTest.borrow(alice, 0, 4, 9);

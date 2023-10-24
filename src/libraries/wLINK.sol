@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {ERC20} from "./libraries/ERC20.sol";
+import {ERC20} from "./ERC20.sol";
 
 
 
-contract ATokenDebt is ERC20{
+contract ATokenLink is ERC20{
 
     modifier onlyOwner() {
         if (msg.sender != owner) revert OnlyOwner();
@@ -18,7 +18,7 @@ contract ATokenDebt is ERC20{
     error OnlyOwner();
 
     constructor()
-        ERC20("ReplicaAaveTokenDebt", "ATKD", 18)
+        ERC20("ReplicaAaveTokenLink", "ATKLINK", 18)
     {
         owner = LendingPool;
         //owner = msg.sender; // El primer owner será el que realiza el despliegue del contrato

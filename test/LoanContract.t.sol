@@ -29,6 +29,7 @@ contract LoanContractTest is Test {
     
 
     string MAINNET_RPC_URL = 'https://eth-mainnet.g.alchemy.com/v2/x285eIv7gcffbvHwtnxjDVz6kIgwvuw3';
+    string SEPOLIA_RPC_URL = 'https://eth-sepolia.g.alchemy.com/v2/QF_rlvr4V0ZORimK7ysBA4mJvl0Bk47c';
     uint256 mainnetFork;
 
 
@@ -125,7 +126,7 @@ contract LoanContractTest is Test {
         //console.log("Alice's deuda despues borrow: ", lendingPoolTest.getDebt(alice));
         console.log("totalSupply ETH despues borrow:", lendingPoolTest.totalSupply(0));
         console.log("totalSupply BTC despues borrow:", lendingPoolTest.totalSupply(1));
-    
+        
     }
 }
       

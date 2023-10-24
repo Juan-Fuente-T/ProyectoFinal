@@ -13,13 +13,15 @@ contract AToken is ERC20{
     }
     
     address public owner;
+    address public LendingPool = 0xc7183455a4C133Ae270771860664b6B7ec320bB1;
         
     error OnlyOwner();
 
     constructor()
-        ERC20("ReplicaAaveToken", "aToken", 18)
+        ERC20("ReplicaAaveToken", "ATK", 18)
     {
-        owner = msg.sender; // El primer owner será el que realiza el despliegue del contrato
+        owner = LendingPool;
+        //owner = msg.sender; // El primer owner será el que realiza el despliegue del contrato
     }
 
 

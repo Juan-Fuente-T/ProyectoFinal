@@ -1,0 +1,40 @@
+Arguments: 
+  C:\Program Files\nodejs\node.exe C:\Users\Juan\AppData\Roaming\npm\node_modules\yarn\bin\yarn.js add --exact --cwd C:\Users\Juan\Desktop\Programacion\ProyectoFinal\frontend react react-dom next
+
+PATH: 
+  C:\Users\Juan\AppData\Local\npm-cache\_npx\e58af746e9dcc116\node_modules\.bin;C:\Users\Juan\Desktop\Programacion\ProyectoFinal\node_modules\.bin;C:\Users\Juan\Desktop\Programacion\node_modules\.bin;C:\Users\Juan\Desktop\node_modules\.bin;C:\Users\Juan\node_modules\.bin;C:\Users\node_modules\.bin;C:\node_modules\.bin;C:\Users\Juan\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\run-script\lib\node-gyp-bin;C:\Python311\Scripts\;C:\Python311\;C:\windows\system32;C:\windows;C:\windows\System32\Wbem;C:\windows\System32\WindowsPowerShell\v1.0\;C:\windows\System32\OpenSSH\;C:\ProgramData\chocolatey\bin;C:\Users\JuanFuente\Documents\Foundry;C:\Program Files\nodejs\;C:\Users\Juan\AppData\Local\Microsoft\WindowsApps;C:\Users\Juan\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\Juan\AppData\Local\Programs\Git\cmd;C:\Users\Juan\AppData\Roaming\npm;C:\Python311;C:\Users\Juan\Desktop\Programacion\Base_Foundry;C:\Program Files\nodejs;
+
+Yarn version: 
+  1.22.19
+
+Node version: 
+  18.18.0
+
+Platform: 
+  win32 x64
+
+Trace: 
+  Error: unable to get local issuer certificate
+      at TLSSocket.onConnectSecure (node:_tls_wrap:1600:34)
+      at TLSSocket.emit (node:events:517:28)
+      at TLSSocket._finishInit (node:_tls_wrap:1017:8)
+      at ssl.onhandshakedone (node:_tls_wrap:803:12)
+
+npm manifest: 
+  {
+    "name": "frontend",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+      "dev": "next dev",
+      "build": "next build",
+      "start": "next start",
+      "lint": "next lint"
+    }
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile
