@@ -8,7 +8,7 @@ pragma solidity ^0.8.13;
 //¿Se testean tambien los aToken??
 
 import { Test, console, console2 } from "forge-std/Test.sol";
-import { LendingPool } from "../src/LendingPool - copia.sol";
+import { LendingPool } from "../src/LendingPool-copia.sol";
 import { InterestRates } from "../src/InterestRates-copia.sol";
 import { PriceOracle } from "../src/PriceOracle-copia.sol";
 import { AToken } from "../src/aToken.sol";
@@ -61,7 +61,8 @@ contract LoanContractTest is Test {
         priceOracle = new PriceOracle(priceFeedMock, _feedRegistryInterface, _ethContractAddress, _btcContractAddress, _linkContractAddress, _usdtContractAddress, _adaContractAddress);
         interestRates = new InterestRates(eth_atr, btc_curve2, priceFeedMock);
         loanContract = new LoanContract(priceOracle, interestRates, lendingPoolTest);
-        lendingPoolTest = new LendingPool(priceOracle,interestRates,loanContract);
+        //lendingPoolTest = new LendingPool(priceOracle,interestRates,loanContract);
+        lendingPoolTest = new LendingPool();
     }
 
     function testLoanContract() public{

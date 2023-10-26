@@ -28,6 +28,7 @@ import { PriceOracle } from "./PriceOracle.sol";
 //si deposit ETH puedo devolver en wihdraw wETH??
 // SI EL USER DEPOSITA ETH NATIVO HE DE DEVOLVERLE ETH NATIVO, o wETH?
 //interface combinada para usar con aToken y aTokenDebt
+///////¿Como devolver en REPAY una cantidad que es fraccion, por ejemplo el collateral es 7 y la deuda 5,25, como devuelvo es deuda??
 interface ICombinedToken{
     function mint(address user, uint256 amount) external; 
     function burn(address user, uint256 amount) external;

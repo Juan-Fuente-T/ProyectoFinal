@@ -8,7 +8,7 @@ pragma solidity ^0.8.13;
 //¿Se testean tambien los aToken??
 
 import { Test, console, console2 } from "forge-std/Test.sol";
-import { LendingPool } from "../src/LendingPool - copia.sol";
+import { LendingPool } from "../src/LendingPool-copia.sol";
 import { InterestRates } from "../src/InterestRates-copia.sol";
 import { PriceOracle } from "../src/PriceOracle-copia.sol";
 import { AToken } from "../src/aToken.sol";
@@ -69,7 +69,8 @@ contract LendingPoolTest is Test {
         priceOracle = new PriceOracle(priceFeedMock, _feedRegistryInterface, _ethContractAddress, _btcContractAddress, _linkContractAddress, _usdtContractAddress, _adaContractAddress);
         interestRates = new InterestRates(eth_atr, btc_curve2, priceFeedMock);
         loanContract = new LoanContract(priceOracle, interestRates, lendingPoolTest);
-        lendingPoolTest = new LendingPool(priceOracle,interestRates,loanContract);
+        //lendingPoolTest = new LendingPool(priceOracle,interestRates,loanContract);
+        lendingPoolTest = new LendingPool();
         //lendingPoolTest.setTokens(_aToken, _aTokenDebt);
     }
 
@@ -96,7 +97,7 @@ contract LendingPoolTest is Test {
         uint256 balance = lendingPoolTest.balanceOf(alice,0);
         //console.log("Alice's balance antes deposit: ", balance);
 
-        lendingPoolTest.deposit(0,100);
+        lendingPoolTest.deposit(0,175);
         lendingPoolTest.deposit(1,100);
         lendingPoolTest.deposit(2,100);
         lendingPoolTest.deposit(3,100);
@@ -126,8 +127,8 @@ contract LendingPoolTest is Test {
 
         assertEq(175000000000000000000, lendingPoolTest.balanceOf(alice, 0));
 
-        //lendingPoolTest.withdraw(0, 15);
-        //lendingPoolTest.withdraw(0, 10);
+        lendingPoolTest.withdraw(0, 15);
+        lendingPoolTest.withdraw(0, 10);
 
         //user, pooid, catidadTotalSupply, cantidadUser
         lendingPoolTest.setTotalSupplyAndOthers(alice, 1, 0, 10);
@@ -208,5 +209,8 @@ contract LendingPoolTest is Test {
         console.log("Alice's colateral usdt despues borrow2: ", lendingPoolTest.getCollateral(alice, 3));
         console.log("PruebaUpdatePrincipalETH", lendingPoolTest.updatePrincipal(0));
         console.log("PruebaUpdateBorrow ETH", lendingPoolTest.updateBorrow(0));
+
+        lendingPoolTest.repay(1,4);
+        lendingPoolTest.repay(4,5);
     }
 }

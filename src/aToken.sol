@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import {ERC20} from "./libraries/ERC20.sol";
 
+///////////////////////VOLVER A PONER ONLYOWNER BIEN///////////////////////////
 
 
 contract AToken is ERC20{
@@ -20,8 +21,8 @@ contract AToken is ERC20{
     constructor()
         ERC20("ReplicaAaveToken", "ATK", 18)
     {
-        owner = LendingPool;
-        //owner = msg.sender; // El primer owner será el que realiza el despliegue del contrato
+        //owner = LendingPool;
+        owner = msg.sender; // El primer owner será el que realiza el despliegue del contrato
     }
 
 
@@ -45,6 +46,10 @@ contract AToken is ERC20{
 
     function userBalance(address user) external view returns (uint256){
         return balanceOf[user];
+    }
+
+    function tokenSupply () external view returns(uint256){
+        return totalSupply;
     }
     
 }

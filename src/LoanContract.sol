@@ -8,7 +8,7 @@ import {ATokenDebt} from "./aTokenDebt.sol";
 import { InterestRates } from "./InterestRates-copia.sol";
 import { PriceOracle } from "./PriceOracle-copia.sol";
 import { IWETH } from "../src/libraries/IWETH.sol";
-import {LendingPool} from "./LendingPool - copia.sol";
+import {LendingPool} from "./LendingPool-copia.sol";
 
 interface ICombinedToken{
     function mint(address user, uint256 amount) external; 
