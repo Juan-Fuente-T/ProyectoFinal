@@ -55,7 +55,8 @@ contract PruebaLendingPool{
 
     constructor(){
 
-        weth = IaToken(0x6F03999B2CC712570e75c73432328B1B669716d1);
+        weth = IaToken(0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9);
+        //weth = IaToken(0x6F03999B2CC712570e75c73432328B1B669716d1);
         //aToken = IaToken(0x35AAd3fD9fe3a8F1897a119fc5DaF34FB6cF4B62);
 
         aToken = new AToken();
@@ -74,18 +75,18 @@ contract PruebaLendingPool{
     }
 
     function deposit(uint256 poolId, uint256 _amount) public{
-        uint256 amount = _amount *10**18;
+        uint256 amount = _amount;
         assets[poolId].totalSupply += amount;
         balances[msg.sender] += amount;
 
-        (bool approved) = aToken.approve(address(this), amount);
+        /*(bool approved) = aToken.approve(address(this), amount);
             if (!approved){
                 revert NotApproved();
-            }
+            }*/
             
         aToken.mint(msg.sender, amount);
         
-        (bool success) = weth.transfer(address(this), amount);
+        (bool success) = weth.transferFrom(msg.sender, address(this), amount);
             if(!success){
                 revert TransferFailed();
             }
