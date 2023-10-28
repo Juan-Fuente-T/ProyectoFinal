@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 //ADDRESS DEPLOY Pruebas LendingPool Sepolia 0xC98B70f92e5511dC2acDa6f2BAadA4ed5ec3A786
+//wrapped ether sepolia bueno: 0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9
 
 //import {ERC20} from "./libraries/ERC20.sol";
 //import {AggregatorV3Interface} from "./libraries/AggregatorV3Interface.sol";

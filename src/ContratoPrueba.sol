@@ -79,13 +79,13 @@ contract PruebaLendingPool{
         assets[poolId].totalSupply += amount;
         balances[msg.sender] += amount;
 
-        /*(bool approved) = aToken.approve(address(this), amount);
-            if (!approved){
-                revert NotApproved();
-            }*/
-            
         aToken.mint(msg.sender, amount);
         
+        (bool approved) = weth.approve(address(this), amount);
+            if (!approved){
+                revert NotApproved();
+            }
+            
         (bool success) = weth.transferFrom(msg.sender, address(this), amount);
             if(!success){
                 revert TransferFailed();
