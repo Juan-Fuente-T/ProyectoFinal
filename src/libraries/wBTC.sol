@@ -20,8 +20,8 @@ contract ATokenBtc is ERC20{
     constructor()
         ERC20("ReplicaAaveTokenBtc", "ATKBTC", 18)
     {
-        owner = LendingPool;
-        //owner = msg.sender; // El primer owner será el que realiza el despliegue del contrato
+        //owner = LendingPool;
+        owner = msg.sender; // El primer owner será el que realiza el despliegue del contrato
     }
 
 

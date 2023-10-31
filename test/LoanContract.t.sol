@@ -117,7 +117,7 @@ contract LoanContractTest is Test {
         */
 
         //(1,5,0) pool donde tomar prestado, amount, balance de donde hacer colateral
-        lendingPoolTest.borrow(alice, 0, 0, 5);
+        lendingPoolTest.borrow(0, 0, 5);
         //lendingPoolTest.borrow(alice, 0, 1, 5);
 
         console.log("Alice's balance despues borrow: ", lendingPoolTest.balanceOf(alice, 0));

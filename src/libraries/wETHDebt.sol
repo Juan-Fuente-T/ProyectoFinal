@@ -5,7 +5,7 @@ import {ERC20} from "./ERC20.sol";
 
 
 
-contract ATokenAda is ERC20{
+contract ATokenDebtEth is ERC20{
 
     modifier onlyOwner() {
         if (msg.sender != owner) revert OnlyOwner();
@@ -13,12 +13,12 @@ contract ATokenAda is ERC20{
     }
     
     address public owner;
-    address public LendingPool = 0xc7183455a4C133Ae270771860664b6B7ec320bB1;
+    //address public LendingPool = 0xc7183455a4C133Ae270771860664b6B7ec320bB1;
         
     error OnlyOwner();
 
     constructor()
-        ERC20("ReplicaAaveTokenAda", "ATKADA", 18)
+        ERC20("ReplicaAaveTokenDebtEth", "DETH", 18)
     {
         //owner = LendingPool;
         owner = msg.sender; // El primer owner será el que realiza el despliegue del contrato

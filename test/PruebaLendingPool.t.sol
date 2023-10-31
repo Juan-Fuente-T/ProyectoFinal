@@ -39,6 +39,7 @@ interface IaToken{
 contract PruebaLendingPoolTest is Test {
     PruebaLendingPool pruebaLendingPoolTest;
     IaToken weth;
+    IaToken wbtc;
     AToken aToken;
     ATokenDebt aTokenDebt;
     
@@ -56,12 +57,11 @@ contract PruebaLendingPoolTest is Test {
 
     function setUp() public {
         //ddress owner = address(PruebaLendingPoolTest);
-        weth = IaToken(0x6F03999B2CC712570e75c73432328B1B669716d1);
-        address _ethContractAddress = makeAddr("_ethContractAddress"); 
-        address _btcContractAddress = makeAddr("_btcContractAddress"); 
-        address _linkContractAddress = makeAddr("_linkContractAddress"); 
-        address _usdtContractAddress = makeAddr("_usdtContractAddress"); 
-        address _adaContractAddress = makeAddr("_adaContractAddress"); 
+        weth = IaToken(0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9);//funciona bien ? weth?
+        //weth = IaToken(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);//variante weth
+        //wbtc = IaToken(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
+        wbtc = IaToken(0x92f3B59a79bFf5dc60c0d59eA13a44D082B2bdFC);
+        
         address _aToken = 0x35AAd3fD9fe3a8F1897a119fc5DaF34FB6cF4B62;
         address _aTokenDebt = 0x3049F48d4C80cBAD467B247aFAb20FfDE451d8Af;
 
@@ -75,16 +75,6 @@ contract PruebaLendingPoolTest is Test {
     }
 
     function testPruebaLendingPool() public{
-        //assertEq(100, lendingPoolTest.assets[0].totalSupply);
-        /*console.log(assets[0].totalSupply());
-        assertEq(100, assets[1]);
-        console.log(assets[1]);
-        assertEq(1000, assets[2]);
-        console.log(assets[2]);
-        assertEq(10000, assets[3]);
-        console.log(assets[3]);
-        assertEq(1000, assets[4]);
-        console.log(assets[4]);*/
 
         // Obtener la dirección del contrato WBTC en Foundry
         //address wbtcAddress = getAddress("WBTC");
@@ -93,21 +83,47 @@ contract PruebaLendingPoolTest is Test {
 
         address alice = makeAddr("alice");
         vm.deal(alice, 500 ether);
-        deal(0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9, alice, 100 ether);
+        //deal de weth
+        deal(0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9, alice, 100 ether);//weth
+        //deal(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2, alice, 100 ether);//variante weth
+        //deal de wbtc
+        //deal(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599, alice, 100 ether);
+        deal(0x92f3B59a79bFf5dc60c0d59eA13a44D082B2bdFC, alice, 100 ether);//wbtc
         vm.startPrank(alice);
+        pruebaLendingPoolTest.setOwner(address(this));    
         //aToken.approve(testPruebaLendingPool, 10 ether);
         console.log("Antes approve");
-        weth.approve(address(pruebaLendingPoolTest), 10 ether);
+        weth.approve(address(pruebaLendingPoolTest), 35 ether);
+        pruebaLendingPoolTest.deposit(0, 35 ether);
         console.log("Despues approve");
 
         console.log("Alice's balance antes deposit: ", pruebaLendingPoolTest.balanceOf(alice,0));
+        console.log("Alice's balance INTERNO antes deposit: ", alice.balance);
 
-        
-        pruebaLendingPoolTest.deposit(0, 10 ether);
-        console.log("Alice's balance depues deposit: ", pruebaLendingPoolTest.balanceOf(alice,0));
-        //pruebaLendingPoolTest.withdraw(0, 20);
-        //onsole.log("Alice's balance depues withdraw: ", pruebaLendingPoolTest.balanceOf(alice,0));
+        //weth.approve(address(pruebaLendingPoolTest), 10 ether);
+        console.log("Alice's balance despues deposit: ", pruebaLendingPoolTest.balanceOf(alice,0));
+        pruebaLendingPoolTest.withdraw(0, 10 ether);
+        console.log("Alice's balance despues withdraw: ", pruebaLendingPoolTest.balanceOf(alice,0));
         //console.log("Tokens balance depues withdraw: ", aToken.userBalance(msg.sender));
         //console.log("Tokens supply depues withdraw: ", aToken.tokenSupply());
+        //weth.approve(address(lendingPoolTest), 175 ether);
+        //lendingPoolTest.deposit(0,175 ether);
+        console.log("Supply ETH",pruebaLendingPoolTest.totalSupply(0));
+        console.log("Supply BTC",pruebaLendingPoolTest.totalSupply(1));
+
+        wbtc.approve(address(pruebaLendingPoolTest), 35 ether);
+        pruebaLendingPoolTest.deposit(1, 35 ether);
+        pruebaLendingPoolTest.withdraw(1, 10 ether);
+        console.log("Supply BTC",pruebaLendingPoolTest.totalSupply(1));
+
+        console.log("Supply BTC Antes borrow",pruebaLendingPoolTest.totalSupply(1));
+        pruebaLendingPoolTest.borrow(0, 1, 5 ether);
+        console.log("Supply BTC Antes repay",pruebaLendingPoolTest.totalSupply(1));
+        weth.approve(address(pruebaLendingPoolTest), 35 ether);
+        pruebaLendingPoolTest.repay(0, 3.75 ether);
+        console.log("Supply BTC Despues repay",pruebaLendingPoolTest.totalSupply(1));
+  
+  
+    
     } 
 }
