@@ -183,27 +183,32 @@ contract PruebaLendingPoolTest is Test {
         console.log("Supply BTC Antes borrow",pruebaLendingPoolTest.totalSupply(1));
         console.log("User collateral 0", pruebaLendingPoolTest.getUserCollateral(alice, 0));
         console.log("User debt 0", pruebaLendingPoolTest.getUserDebt(alice, 0));
-        pruebaLendingPoolTest.borrow(1, 4, 5 ether);
         console.log("IdBorro4", pruebaLendingPoolTest.getIdBorrow(alice, 4));
 
         console.log("Borrow1", pruebaLendingPoolTest.getBorrowPoolId(alice, 1));
         console.log("Supply BTC Antes borrow Falla",pruebaLendingPoolTest.totalSupply(1));
         console.log("Supply USDT Antes borrow Falla",pruebaLendingPoolTest.totalSupply(3));
         pruebaLendingPoolTest.borrow(0, 2, 5 ether);
-        console.log("AmountCollateral", pruebaLendingPoolTest.getAmountCollateral());
-        console.log("Amount", pruebaLendingPoolTest.getAmount());
+        console.log("AmountCollateral borrow025", pruebaLendingPoolTest.getAmountCollateral());
+        console.log("Amountborrow025", pruebaLendingPoolTest.getAmount());
         
         pruebaLendingPoolTest.borrow(2, 4, 5 ether);
+        console.log("AmountCollateral borrow245", pruebaLendingPoolTest.getAmountCollateral());
+        console.log("Amountborrow245", pruebaLendingPoolTest.getAmount());
         pruebaLendingPoolTest.borrow(1, 3, 10 ether);
-        console.log("Borrow0", pruebaLendingPoolTest.getBorrowPoolId(alice, 0));
-        console.log("Borrow1", pruebaLendingPoolTest.getBorrowPoolId(alice, 1));
-        console.log("Borrow2", pruebaLendingPoolTest.getBorrowPoolId(alice, 2));
-        console.log("Borrow3", pruebaLendingPoolTest.getBorrowPoolId(alice, 3));
-        console.log("Borrow4", pruebaLendingPoolTest.getBorrowPoolId(alice, 4));
+        console.log("AmountCollateral borrow1310", pruebaLendingPoolTest.getAmountCollateral());
+        console.log("Amountborrow1310", pruebaLendingPoolTest.getAmount());
+        console.log("Borrow0 poolId", pruebaLendingPoolTest.getBorrowPoolId(alice, 0));
+        console.log("Borrow1 poolId", pruebaLendingPoolTest.getBorrowPoolId(alice, 1));
+        console.log("Borrow2 poolId", pruebaLendingPoolTest.getBorrowPoolId(alice, 2));
+        console.log("Borrow3 poolId", pruebaLendingPoolTest.getBorrowPoolId(alice, 3));
+        console.log("Borrow4 poolId", pruebaLendingPoolTest.getBorrowPoolId(alice, 4));
+        //console.log("BorrowEXTTRA poolId", pruebaLendingPoolTest.getBorrowPoolId(alice, 5));//solo hay 5 poolId
 
         pruebaLendingPoolTest.borrow(4, 0, 10 ether);
         console.log("Balance 2", pruebaLendingPoolTest.balanceOf(alice,2));
         pruebaLendingPoolTest.borrow(3, 0, 10 ether);
+        pruebaLendingPoolTest.borrow(4, 0, 20 ether);
         console.log("IdBorrow1", pruebaLendingPoolTest.getIdBorrow(alice, 1));
         console.log("IdBorrow2", pruebaLendingPoolTest.getIdBorrow(alice, 2));
         
@@ -222,9 +227,10 @@ contract PruebaLendingPoolTest is Test {
 
         console.log("User collateral 1", pruebaLendingPoolTest.getUserCollateral(alice, 1));
         console.log("User debt 1", pruebaLendingPoolTest.getUserDebt(alice, 1));
+        pruebaLendingPoolTest.borrow(1, 4, 5 ether);
     
         wada.approve(address(pruebaLendingPoolTest), 3.75 ether);
-        //pruebaLendingPoolTest.repay(1, 3.75 ether);
+        pruebaLendingPoolTest.repay(1, 3.75 ether);
 
         wlink.approve(address(pruebaLendingPoolTest), 3.75 ether);
         pruebaLendingPoolTest.repay(0, 3.75 ether);
