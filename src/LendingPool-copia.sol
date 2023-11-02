@@ -236,12 +236,12 @@ contract LendingPool{
     function decreaseTotalSupply(uint256 poolId, uint256 _amount) public {
         assets[poolId].totalSupply -= _amount;
     }
-    function increaseTotalDebt(uint256 idBorrow, uint256 _amount) public {
-        assets[idBorrow].totalDebt += _amount;
+    function increaseTotalDebt(uint256 poolId, uint256 _amount) public {
+        assets[poolId].totalDebt += _amount;
         
     }
-    function decreaseTotalDebt(uint256 idBorrow, uint256 _amount) public{
-        assets[idBorrow].totalDebt -= _amount;
+    function decreaseTotalDebt(uint256 poolId, uint256 _amount) public{
+        assets[poolId].totalDebt -= _amount;
     }
 
     /*function increaseCollateral(address user, uint256 idBorrow, uint256 _amount) public {
@@ -347,10 +347,10 @@ contract LendingPool{
                 revert NotApproved();
 
             }
-            (bool success) = wbtc.transferFrom(msg.sender, address(this), _amount);
+            /*(bool success) = wbtc.transferFrom(msg.sender, address(this), _amount);
             if(!success){
                 revert TransferFailed();
-            }
+            }*/
         }
     
 
@@ -363,11 +363,11 @@ contract LendingPool{
             //wlink.permit(owner, msg.sender, amount, 30, 0, bytes32(0), bytes32(0));
             aTokenLink.mint(msg.sender, _amount);
 
-            (bool approved) = weth.approve(msg.sender, _amount);
+            (bool approved) = wlink.approve(msg.sender, _amount);
             if (!approved){
                 revert NotApproved();
             }
-            (bool success) = weth.transferFrom(msg.sender, address(this), _amount);
+            (bool success) = wlink.transferFrom(msg.sender, address(this), _amount);
             if(!success){
                 revert TransferFailed();
             }
@@ -383,12 +383,12 @@ contract LendingPool{
             //wlink.permit(owner, msg.sender, amount, 30, 0, bytes32(0), bytes32(0));
             aTokenUsdt.mint(msg.sender, _amount);
 
-            (bool approved) = weth.approve(msg.sender, _amount);
+            (bool approved) = wusdt.approve(msg.sender, _amount);
             if (!approved){
                 revert NotApproved();
 
             }
-            (bool success) = weth.transferFrom(msg.sender, address(this), _amount);
+            (bool success) = wusdt.transferFrom(msg.sender, address(this), _amount);
             if(!success){
                 revert TransferFailed();
             }
@@ -403,12 +403,12 @@ contract LendingPool{
             //wada.permit(owner, msg.sender, amount, 30, 0, bytes32(0), bytes32(0));
             aTokenAda.mint(msg.sender, _amount);
 
-            (bool approved) = weth.approve(msg.sender, _amount);
+            (bool approved) = wada.approve(msg.sender, _amount);
             if (!approved){
                 revert NotApproved();
             }
 
-            (bool success) = weth.transferFrom(msg.sender, address(this), _amount);
+            (bool success) = wada.transferFrom(msg.sender, address(this), _amount);
             if(!success){
                 revert TransferFailed();
             }

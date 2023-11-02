@@ -150,26 +150,26 @@ contract LendingPoolTest is Test {
         console.log("Supply 1",lendingPoolTest.totalSupply(1));
 
         console.log("Fondos Alice BTC ANT", lendingPoolTest.balanceOf(alice, 1));
-        //wbtc.approve(address(lendingPoolTest), 250 ether);
+        wbtc.approve(address(lendingPoolTest), 100 ether);
         lendingPoolTest.deposit(1,100 ether);
         console.log("Fondos Alice BTC DES", lendingPoolTest.balanceOf(alice, 1));
       
         console.log("Fondos Alice Link ANT:", lendingPoolTest.balanceOf(alice, 2));
         console.log("Supply 2 ANT",lendingPoolTest.totalSupply(2));
-        //wlink.approve(address(lendingPoolTest), 25 ether);
+        wlink.approve(address(lendingPoolTest), 100 ether);
         lendingPoolTest.deposit(2,100 ether);
         console.log("Supply 2 DES",lendingPoolTest.totalSupply(2));
         console.log("Fondos Alice Link DES:", lendingPoolTest.balanceOf(alice, 2));
       
         console.log("Fondos Alice Usdt ANT:", lendingPoolTest.balanceOf(alice, 3));
         console.log("Supply 3 ANT",lendingPoolTest.totalSupply(3));
-        //wusdt.approve(address(lendingPoolTest), 25 ether);
+        wusdt.approve(address(lendingPoolTest), 100 ether);
         lendingPoolTest.deposit(3,100 ether);
         console.log("Supply 3 DES",lendingPoolTest.totalSupply(3));
         console.log("Fondos Alice Usdt DES:", lendingPoolTest.balanceOf(alice, 3));
       
         console.log("Fondos Alice Ada ANT :", lendingPoolTest.balanceOf(alice, 4));
-        //wada.approve(address(lendingPoolTest), 25 ether);
+        wada.approve(address(lendingPoolTest), 100 ether);
         lendingPoolTest.deposit(4,100 ether);
         console.log("Fondos Alice Ada DES:", lendingPoolTest.balanceOf(alice, 4));
       
