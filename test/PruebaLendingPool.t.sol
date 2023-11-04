@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-
 // PREGUNTAS
 //¿Como acceder a los datos de un mapping del contrato original?
 //¿Que es lo que hay que testear, completamente _todo?
@@ -9,25 +8,9 @@ pragma solidity ^0.8.13;
 
 import { Test, console, console2 } from "forge-std/Test.sol";
 import { PruebaLendingPool } from "../src/ContratoPrueba.sol";
-import { AToken } from "../src/aToken.sol";
-import { ATokenDebt } from "../src/aTokenDebt.sol";
-//import { PriceFeedMock } from "../src/PriceFeedMock.sol";
+import { AToken } from "../src/libraries/aToken.sol";
+import { ATokenDebt } from "../src/libraries/aTokenDebt.sol";
 import { IWETH } from "../src/libraries/IWETH.sol";
-//import {LoanContract} from "../src/LoanContract.sol";
-import { ATokenEth } from "../src/libraries/wETH.sol";
-import { ATokenBtc } from "../src/libraries/wBTC.sol";
-import { ATokenLink } from "../src/libraries/wLINK.sol";
-import { ATokenUsdt } from "../src/libraries/wUSDT.sol";
-import { ATokenAda } from "../src/libraries/wADA.sol";
-import { ATokenDebtEth } from "../src/libraries/wETHDebt.sol";
-import { ATokenDebtBtc } from "../src/libraries/wBTCDebt.sol";
-import { ATokenDebtLink } from "../src/libraries/wLINKDebt.sol";
-import { ATokenDebtUsdt } from "../src/libraries/wUSDTDebt.sol";
-import { ATokenDebtAda } from "../src/libraries/wADADebt.sol";
-
-
-
-
 
 interface IaToken{
     function mint(address user, uint256 amount) external; 
@@ -55,20 +38,20 @@ contract PruebaLendingPoolTest is Test {
     IaToken wbtc;
     IaToken wlink;
     IaToken wusdt;
-    IaToken wada;
+    IaToken wdai;
     AToken aToken;
     ATokenDebt aTokenDebt;
 
-    ATokenEth public aTokenEth;
-    ATokenBtc public aTokenBtc;
-    ATokenLink public aTokenLink;
-    ATokenUsdt public aTokenUsdt;
-    ATokenAda public aTokenAda;
-    ATokenDebtEth public aTokenDebtEth;
-    ATokenDebtBtc public aTokenDebtBtc;
-    ATokenDebtLink public aTokenDebtLink;
-    ATokenDebtUsdt public aTokenDebtUsdt;
-    ATokenDebtAda public aTokenDebtAda;
+    AToken public aTokenEth;
+    AToken public aTokenBtc;
+    AToken public aTokenLink;
+    AToken public aTokenUsdt;
+    AToken public aTokenDai;
+    ATokenDebt public aTokenDebtEth;
+    ATokenDebt public aTokenDebtBtc;
+    ATokenDebt public aTokenDebtLink;
+    ATokenDebt public aTokenDebtUsdt;
+    ATokenDebt public aTokenDebtDai;
    
     
 
@@ -78,8 +61,6 @@ contract PruebaLendingPoolTest is Test {
     uint256 mainnetFork;
     uint256 sepoliaFork;
 
-
-        
     //30 Day ETH ATR 0xceA6Aa74E6A86a7f85B571Ce1C34f1A60B77CD29
 
     function setUp() public {
@@ -89,24 +70,27 @@ contract PruebaLendingPoolTest is Test {
         //wbtc = IaToken(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
         wbtc = IaToken(0x92f3B59a79bFf5dc60c0d59eA13a44D082B2bdFC);
         //wlink = IaToken(0x010300C2cA5F5Ce31Ae1FaB11586d7bb685805C8);
-        wlink = IaToken(0xcE4cE12Cf2c4BDF213DCaA1ACA99ECA9Cd4d7F14);// Prueba VARIANTE
+        //wlink = IaToken(0x779877A7B0D9E8603169DdbD7836e478b4624789);//ADRI Prueba VARIANTE
+        wlink = IaToken(0x92f3B59a79bFf5dc60c0d59eA13a44D082B2bdFC);// Prueba BTC
+        //wlink = IaToken(0x010300C2cA5F5Ce31Ae1FaB11586d7bb685805C8);// Prueba VARIANTE
         //wusdt = IaToken(0x2CA98D7C8504a1eD69619EEc527B279361c70dca);
-        wusdt = IaToken(0x55Ef41E13CF703eA5929b1Ce117D263766519DDe);//VARIANTE PRUEBA
-        //wada = IaToken(0xd1f79B76d477F026e8119dF29083e3eF8192f923);
-        wada = IaToken(0x5C1A2a4808Fd0Db90eBA797254C5ef82cbfc4b8D);//ada PRUEBA DAI
+        //wusdt = IaToken(0x7169D38820dfd117C3FA1f22a697dBA58d90BA06);// VARIANTE PRUEBA ADRI
+        wusdt = IaToken(0x92f3B59a79bFf5dc60c0d59eA13a44D082B2bdFC);// PRUEBA BTC
+        //wdai = IaToken(0xd1f79B76d477F026e8119dF29083e3eF8192f923);//dai
+        wdai = IaToken(0x3e622317f8C93f7328350cF0B56d9eD4C620C5d6);//dai PRUEBA DAI
 
-        aTokenEth = new ATokenEth();
-        aTokenBtc = new ATokenBtc();
-        aTokenLink = new ATokenLink();
-        aTokenUsdt = new ATokenUsdt();
-        aTokenAda = new ATokenAda();
-        aTokenDebtEth = new ATokenDebtEth();
-        aTokenDebtEth = new ATokenDebtEth();
-        aTokenDebtLink = new ATokenDebtLink();
-        aTokenDebtUsdt = new ATokenDebtUsdt();
-        aTokenDebtAda = new ATokenDebtAda();
+
+        aTokenEth = new AToken("ReplicaAaveTokenEth", "ATKETH", 18);
+        aTokenBtc = new AToken("ReplicaAaveTokenBtc", "ATKBTC", 18);
+        aTokenLink = new AToken("ReplicaAaveTokenLink", "ATKLINK", 18);
+        aTokenUsdt = new AToken("ReplicaAaveTokenUsdt", "ATKUSDT", 18);
+        aTokenDai = new AToken("ReplicaAaveTokenDai", "ATKDAI", 18);
+        aTokenDebtEth = new ATokenDebt("ReplicaAaveTokenDebtEth", "DETH", 18);
+        aTokenDebtEth = new ATokenDebt("ReplicaAaveTokenDebBtc", "DBTC", 18);
+        aTokenDebtLink = new ATokenDebt("ReplicaAaveTokenDebtLink", "DLINK", 18);
+        aTokenDebtUsdt = new ATokenDebt("ReplicaAaveTokenDebtUsdt", "DUSDT", 18);
+        aTokenDebtDai = new ATokenDebt("ReplicaAaveTokenDebtDai", "DDAI", 18);
         
-
         address _aToken = 0x35AAd3fD9fe3a8F1897a119fc5DaF34FB6cF4B62;
         address _aTokenDebt = 0x3049F48d4C80cBAD467B247aFAb20FfDE451d8Af;
 
@@ -129,123 +113,163 @@ contract PruebaLendingPoolTest is Test {
         address alice = makeAddr("alice");
         //vm.deal(alice, 500 ether);
         //deal de weth
-        deal(0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9, alice, 100 ether);//weth
+        deal(0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9, alice, 500 ether);//weth
         //deal(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2, alice, 100 ether);//variante weth
         //deal de wbtc
         //deal(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599, alice, 100 ether);
-        deal(0x92f3B59a79bFf5dc60c0d59eA13a44D082B2bdFC, alice, 100 ether);//wbtc
+        deal(0x92f3B59a79bFf5dc60c0d59eA13a44D082B2bdFC, alice, 500 ether);//wbtc
         //deal(0x010300C2cA5F5Ce31Ae1FaB11586d7bb685805C8, alice, 100 ether);//wlink
-        deal(0xcE4cE12Cf2c4BDF213DCaA1ACA99ECA9Cd4d7F14, alice, 100 ether);//wlink prueba VARIANTE
+        deal(0x779877A7B0D9E8603169DdbD7836e478b4624789, alice, 500 ether);//wlink prueba VARIANTE
+        //deal(0x010300C2cA5F5Ce31Ae1FaB11586d7bb685805C8, alice, 200 ether);//wlink prueba VARIANTE
         //deal(0x2CA98D7C8504a1eD69619EEc527B279361c70dca, alice, 100 ether);//wusdt
-        deal(0x55Ef41E13CF703eA5929b1Ce117D263766519DDe, alice, 100 ether);//wusdt VARIANTE PRUEBA
-        //deal(0xd1f79B76d477F026e8119dF29083e3eF8192f923, alice, 100 ether);//wada
-        deal(0x5C1A2a4808Fd0Db90eBA797254C5ef82cbfc4b8D, alice, 100 ether);//wada PRUEBA DAI
-       
+        deal(0x7169D38820dfd117C3FA1f22a697dBA58d90BA06, alice, 500 ether);//wusdt VARIANTE PRUEBA
+        //deal(0xd1f79B76d477F026e8119dF29083e3eF8192f923, alice, 100 ether);//wdai
+        deal(0x3e622317f8C93f7328350cF0B56d9eD4C620C5d6, alice, 250 ether);//wdai PRUEBA DAI
+        
         vm.startPrank(alice);
         //pruebaLendingPoolTest.setOwner(address(this));    
         //aToken.approve(testPruebaLendingPool, 10 ether);
         console.log("Antes approve");
-        weth.approve(address(pruebaLendingPoolTest), 35 ether);
-        pruebaLendingPoolTest.deposit(0, 35 ether);
+        
         console.log("Despues approve");
 
         console.log("Alice's balance antes deposit: ", pruebaLendingPoolTest.balanceOf(alice,0));
         console.log("Alice's balance INTERNO antes deposit: ", alice.balance);
 
-        //weth.approve(address(pruebaLendingPoolTest), 10 ether);
         console.log("Alice's balance despues deposit: ", pruebaLendingPoolTest.balanceOf(alice,0));
-        pruebaLendingPoolTest.withdraw(0, 10 ether);
+        
         console.log("Alice's balance despues withdraw: ", pruebaLendingPoolTest.balanceOf(alice,0));
-        //console.log("Tokens balance depues withdraw: ", aToken.userBalance(msg.sender));
-        //console.log("Tokens supply depues withdraw: ", aToken.tokenSupply());
-        //weth.approve(address(lendingPoolTest), 175 ether);
-        //lendingPoolTest.deposit(0,175 ether);
+        //console.log("Tokens balance despues withdraw: ", aToken.userBalance(msg.sender));
+        //console.log("Tokens supply despues withdraw: ", aToken.tokenSupply());
         console.log("Supply ETH",pruebaLendingPoolTest.totalSupply(0));
         console.log("Supply BTC",pruebaLendingPoolTest.totalSupply(1));
+        console.log("Underly. BTC",pruebaLendingPoolTest.getUnderlying(1));
+        console.log("Underly. LINK",pruebaLendingPoolTest.getUnderlying(2));
+        console.log("Underly. USDT",pruebaLendingPoolTest.getUnderlying(3));
 
-        wbtc.approve(address(pruebaLendingPoolTest), 95 ether);
-        pruebaLendingPoolTest.deposit(1, 95 ether);
-        pruebaLendingPoolTest.withdraw(1, 15 ether);
+        weth.approve(address(pruebaLendingPoolTest), 50 ether);
+        pruebaLendingPoolTest.deposit(0, 50 ether);
+        pruebaLendingPoolTest.withdraw(0, 10 ether);
+
+        weth.approve(address(pruebaLendingPoolTest), 100 ether);
+        pruebaLendingPoolTest.deposit(0, 100 ether);
+        pruebaLendingPoolTest.withdraw(0, 10 ether);
+
+        wbtc.approve(address(pruebaLendingPoolTest), 100 ether);
+        pruebaLendingPoolTest.deposit(1, 100 ether);
+        pruebaLendingPoolTest.withdraw(1, 10 ether);
+        //(pruebaLendingPoolTest.pools[2].underlying).approve(address(pruebaLendingPoolTest), 100 ether);
         wlink.approve(address(pruebaLendingPoolTest), 100 ether);
         pruebaLendingPoolTest.deposit(2, 100 ether);
+        pruebaLendingPoolTest.withdraw(2, 10 ether);
+
         wusdt.approve(address(pruebaLendingPoolTest), 100 ether);
         pruebaLendingPoolTest.deposit(3, 100 ether);
-        wada.approve(address(pruebaLendingPoolTest), 100 ether);
+        pruebaLendingPoolTest.withdraw(3, 10 ether);
+        
+        wdai.approve(address(pruebaLendingPoolTest), 100 ether);
         pruebaLendingPoolTest.deposit(4, 100 ether);
+        pruebaLendingPoolTest.withdraw(4, 10 ether);
         console.log("Supply BTC",pruebaLendingPoolTest.totalSupply(1));
 
-        console.log("IdBorro0", pruebaLendingPoolTest.getIdBorrow(alice, 0));
-        console.log("IdBorro1", pruebaLendingPoolTest.getIdBorrow(alice, 1));
-        console.log("IdBorro2", pruebaLendingPoolTest.getIdBorrow(alice, 2));
-        console.log("IdBorro3", pruebaLendingPoolTest.getIdBorrow(alice, 3));
-        console.log("IdBorro4", pruebaLendingPoolTest.getIdBorrow(alice, 4));
+        //console.log("IdBorro1", pruebaLendingPoolTest.getIdBorrow(alice, 1));
+       
+        pruebaLendingPoolTest.borrow(0, 2, 10 ether);//0
+        pruebaLendingPoolTest.borrow(2, 1, 10 ether);//1
+        pruebaLendingPoolTest.borrow(1, 3, 10 ether);//2
+        pruebaLendingPoolTest.borrow(3, 0, 20 ether);//3
+        pruebaLendingPoolTest.borrow(4, 0, 20 ether);//4
+        pruebaLendingPoolTest.borrow(3, 4, 20 ether);//5
+        
+        
+        wdai.approve(address(pruebaLendingPoolTest), 15 ether);
+        pruebaLendingPoolTest.repay(0, 4, 15 ether, 4);
 
+        wbtc.approve(address(pruebaLendingPoolTest), 15 ether);//BTC FALSO
+        pruebaLendingPoolTest.repay(4, 3, 15 ether, 5);
+
+        weth.approve(address(pruebaLendingPoolTest), 7.5 ether);
+        pruebaLendingPoolTest.repay(2, 0, 7.5 ether, 0);
+    
+        wbtc.approve(address(pruebaLendingPoolTest), 7.5 ether);//BTC FALSO
+        pruebaLendingPoolTest.repay(1, 2, 7.5 ether, 1);
+    
+        wbtc.approve(address(pruebaLendingPoolTest), 7.5 ether);
+        pruebaLendingPoolTest.repay(3, 1, 7.5 ether, 2);
+    
+        wbtc.approve(address(pruebaLendingPoolTest), 15 ether);//BTC FALSO
+        pruebaLendingPoolTest.repay(0, 3, 15 ether, 3);
+
+        console.log("LoanCounter",  pruebaLendingPoolTest.getLoanCounter());
+    
+
+        
+        
+        
+        
+        /*
+        
         console.log("Supply BTC Antes borrow",pruebaLendingPoolTest.totalSupply(1));
-        console.log("User collateral 0", pruebaLendingPoolTest.getUserCollateral(alice, 0));
-        console.log("User debt 0", pruebaLendingPoolTest.getUserDebt(alice, 0));
-        console.log("IdBorro4", pruebaLendingPoolTest.getIdBorrow(alice, 4));
+        console.log("User collateral 0", pruebaLendingPoolTest.getUserCollateral(0, 1));
+        console.log("User debt 0", pruebaLendingPoolTest.getUserDebt(1, 0));
 
-        console.log("Borrow1", pruebaLendingPoolTest.getBorrowPoolId(alice, 1));
         console.log("Supply BTC Antes borrow Falla",pruebaLendingPoolTest.totalSupply(1));
         console.log("Supply USDT Antes borrow Falla",pruebaLendingPoolTest.totalSupply(3));
         pruebaLendingPoolTest.borrow(0, 2, 5 ether);
-        console.log("AmountCollateral borrow025", pruebaLendingPoolTest.getAmountCollateral());
-        console.log("Amountborrow025", pruebaLendingPoolTest.getAmount());
+        //console.log("AmountCollateral borrow025", pruebaLendingPoolTest.getAmountCollateral());
+        //console.log("Amountborrow025", pruebaLendingPoolTest.getAmount());
         
-        pruebaLendingPoolTest.borrow(2, 4, 5 ether);
-        console.log("AmountCollateral borrow245", pruebaLendingPoolTest.getAmountCollateral());
+        //pruebaLendingPoolTest.borrow(2, 4, 5 ether);
+        //console.log("AmountCollateral borrow245", pruebaLendingPoolTest.getAmountCollateral());
         console.log("Amountborrow245", pruebaLendingPoolTest.getAmount());
         pruebaLendingPoolTest.borrow(1, 3, 10 ether);
         console.log("AmountCollateral borrow1310", pruebaLendingPoolTest.getAmountCollateral());
         console.log("Amountborrow1310", pruebaLendingPoolTest.getAmount());
-        console.log("Borrow0 poolId", pruebaLendingPoolTest.getBorrowPoolId(alice, 0));
-        console.log("Borrow1 poolId", pruebaLendingPoolTest.getBorrowPoolId(alice, 1));
-        console.log("Borrow2 poolId", pruebaLendingPoolTest.getBorrowPoolId(alice, 2));
-        console.log("Borrow3 poolId", pruebaLendingPoolTest.getBorrowPoolId(alice, 3));
-        console.log("Borrow4 poolId", pruebaLendingPoolTest.getBorrowPoolId(alice, 4));
+        //console.log("Borrow0 poolId", pruebaLendingPoolTest.getBorrowPoolId(alice, 0));
+        
         //console.log("BorrowEXTTRA poolId", pruebaLendingPoolTest.getBorrowPoolId(alice, 5));//solo hay 5 poolId
 
-        pruebaLendingPoolTest.borrow(4, 0, 10 ether);
+        //pruebaLendingPoolTest.borrow(4, 0, 10 ether);
         console.log("Balance 2", pruebaLendingPoolTest.balanceOf(alice,2));
         pruebaLendingPoolTest.borrow(3, 0, 10 ether);
-        pruebaLendingPoolTest.borrow(4, 0, 20 ether);
-        console.log("IdBorrow1", pruebaLendingPoolTest.getIdBorrow(alice, 1));
-        console.log("IdBorrow2", pruebaLendingPoolTest.getIdBorrow(alice, 2));
+        //pruebaLendingPoolTest.borrow(4, 1, 20 ether);
+        //console.log("IdBorrow1", pruebaLendingPoolTest.getIdBorrow(alice, 1));
+        //console.log("IdBorrow2", pruebaLendingPoolTest.getIdBorrow(alice, 2));
         
-        console.log("User collateral 1 despues borrow", pruebaLendingPoolTest.getUserCollateral(alice, 1));
-        console.log("User debt 1 despues borrow", pruebaLendingPoolTest.getUserDebt(alice, 1));
+        console.log("User collateral 1 despues borrow", pruebaLendingPoolTest.getUserCollateral(1, 3));
+        console.log("User debt 1 despues borrow", pruebaLendingPoolTest.getUserDebt(1, 3));
         //pruebaLendingPoolTest.borrow(3, 4, 5 ether);
 
         console.log("Supply BTC Antes repay",pruebaLendingPoolTest.totalSupply(1));
-        //wbtc.approve(address(pruebaLendingPoolTest), 3.75 ether);
-        console.log("User collateral 0", pruebaLendingPoolTest.getUserCollateral(alice, 0));
-        console.log("User debt 0", pruebaLendingPoolTest.getUserDebt(alice, 0));
-        //pruebaLendingPoolTest.repay(1, 3.75 ether);
-        console.log("User collateral 0 despues", pruebaLendingPoolTest.getUserCollateral(alice, 0));
-        console.log("User debt 0 despues", pruebaLendingPoolTest.getUserDebt(alice, 0));
+        wbtc.approve(address(pruebaLendingPoolTest), 3.75 ether);//BTC FALSO    
+        console.log("User collateral 0", pruebaLendingPoolTest.getUserCollateral(0, 2));
+        console.log("User debt 0", pruebaLendingPoolTest.getUserDebt(0, 2));
+        pruebaLendingPoolTest.repay(2, 0, 3.75 ether, 0);
+        console.log("User collateral 0 despues", pruebaLendingPoolTest.getUserCollateral(0, 2));
+        console.log("User debt 0 despues", pruebaLendingPoolTest.getUserDebt(0, 2));
         console.log("Supply BTC Despues repay",pruebaLendingPoolTest.totalSupply(1));
 
-        console.log("User collateral 1", pruebaLendingPoolTest.getUserCollateral(alice, 1));
-        console.log("User debt 1", pruebaLendingPoolTest.getUserDebt(alice, 1));
-        pruebaLendingPoolTest.borrow(1, 4, 5 ether);
+        console.log("User collateral 1", pruebaLendingPoolTest.getUserCollateral(1, 0));
+        console.log("User debt 1", pruebaLendingPoolTest.getUserDebt(1, 0));
+        //pruebaLendingPoolTest.borrow(1, 4, 5 ether);
     
-        wada.approve(address(pruebaLendingPoolTest), 3.75 ether);
-        pruebaLendingPoolTest.repay(1, 3.75 ether);
+        wdai.approve(address(pruebaLendingPoolTest), 3.75 ether);
+        //pruebaLendingPoolTest.repay(4, 1, 3.75 ether, 6);
 
-        wlink.approve(address(pruebaLendingPoolTest), 3.75 ether);
-        pruebaLendingPoolTest.repay(0, 3.75 ether);
+        wdai.approve(address(pruebaLendingPoolTest), 3.75 ether);
+        //pruebaLendingPoolTest.repay(4, 2, 3.75 ether, 1);
 
-        wada.approve(address(pruebaLendingPoolTest), 3.75 ether);
-        pruebaLendingPoolTest.repay(2, 3.75 ether);
-    
-        wusdt.approve(address(pruebaLendingPoolTest), 7.5 ether);
-        pruebaLendingPoolTest.repay(1, 7.5 ether);
+        wbtc.approve(address(pruebaLendingPoolTest), 7.5 ether);
+        pruebaLendingPoolTest.repay(3, 1, 7.5 ether, 2);
     
         weth.approve(address(pruebaLendingPoolTest), 7.5 ether);
-        pruebaLendingPoolTest.repay(4, 7.5 ether);
+       // pruebaLendingPoolTest.repay(0, 4, 7.5 ether, 3);
     
-        weth.approve(address(pruebaLendingPoolTest), 7.5 ether);
-        pruebaLendingPoolTest.repay(3, 7.5 ether);
+        weth.approve(address(pruebaLendingPoolTest), 7.5 ether);//BTC FALSO
+        pruebaLendingPoolTest.repay(0, 3, 7.5 ether, 4);
+    
+        wbtc.approve(address(pruebaLendingPoolTest), 15 ether);
+        //pruebaLendingPoolTest.repay(1, 4, 7.5 ether, 5);*/
     
     } 
 }
