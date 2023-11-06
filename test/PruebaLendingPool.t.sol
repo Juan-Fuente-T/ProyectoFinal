@@ -12,6 +12,7 @@ import { AToken } from "../src/libraries/aToken.sol";
 import { ATokenDebt } from "../src/libraries/aTokenDebt.sol";
 import { IWETH } from "../src/libraries/IWETH.sol";
 
+
 interface IaToken{
     function mint(address user, uint256 amount) external; 
     function burn(address user, uint256 amount) external;
@@ -33,14 +34,15 @@ interface IaToken{
 }
 
 contract PruebaLendingPoolTest is Test {
+    
     PruebaLendingPool pruebaLendingPoolTest;
     IaToken weth;
     IaToken wbtc;
     IaToken wlink;
     IaToken wusdt;
     IaToken wdai;
-    AToken aToken;
-    ATokenDebt aTokenDebt;
+    //AToken aToken;
+    //ATokenDebt aTokenDebt;
 
     AToken public aTokenEth;
     AToken public aTokenBtc;
@@ -91,8 +93,8 @@ contract PruebaLendingPoolTest is Test {
         aTokenDebtUsdt = new ATokenDebt("ReplicaAaveTokenDebtUsdt", "DUSDT", 18);
         aTokenDebtDai = new ATokenDebt("ReplicaAaveTokenDebtDai", "DDAI", 18);
         
-        address _aToken = 0x35AAd3fD9fe3a8F1897a119fc5DaF34FB6cF4B62;
-        address _aTokenDebt = 0x3049F48d4C80cBAD467B247aFAb20FfDE451d8Af;
+        //address _aToken = 0x35AAd3fD9fe3a8F1897a119fc5DaF34FB6cF4B62;
+        //address _aTokenDebt = 0x3049F48d4C80cBAD467B247aFAb20FfDE451d8Af;
 
         //mainnetFork = vm.createFork(MAINNET_RPC_URL);
         sepoliaFork = vm.createFork(SEPOLIA_RPC_URL);
@@ -102,6 +104,7 @@ contract PruebaLendingPoolTest is Test {
         pruebaLendingPoolTest.setOwner(address(this));    
         //lendingPoolTest.setTokens(_aToken, _aTokenDebt);
     }
+
 
     function testPruebaLendingPool() public{
 
@@ -129,10 +132,7 @@ contract PruebaLendingPoolTest is Test {
         vm.startPrank(alice);
         //pruebaLendingPoolTest.setOwner(address(this));    
         //aToken.approve(testPruebaLendingPool, 10 ether);
-        console.log("Antes approve");
         
-        console.log("Despues approve");
-
         console.log("Alice's balance antes deposit: ", pruebaLendingPoolTest.balanceOf(alice,0));
         console.log("Alice's balance INTERNO antes deposit: ", alice.balance);
 
@@ -202,6 +202,22 @@ contract PruebaLendingPoolTest is Test {
 
         console.log("LoanCounter",  pruebaLendingPoolTest.getLoanCounter());
     
+        console.log("DataFeedETH_USD",pruebaLendingPoolTest.getDataFeed(0));
+        console.log("DataFeedBTC_USD",pruebaLendingPoolTest.getDataFeed(1));
+        console.log("DataFeedLINK_USD",pruebaLendingPoolTest.getDataFeed(2));
+        console.log("DataFeedUSDC_USD",pruebaLendingPoolTest.getDataFeed(3));
+        console.log("DataFeedDAI_USD",pruebaLendingPoolTest.getDataFeed(4));
+
+        console.log("Link en Usdc",pruebaLendingPoolTest.getCovertedValue(2, 3));
+        console.log("Eth en Btc",pruebaLendingPoolTest.getCovertedValue(0, 1));
+        console.log("Btc en Eth",pruebaLendingPoolTest.getCovertedValue(1, 2));
+        console.log("Btc en Dai",pruebaLendingPoolTest.getCovertedValue(1, 4));
+        console.log("Dai en Eth",pruebaLendingPoolTest.getCovertedValue(4, 0));
+        console.log("Usdc en Btc",pruebaLendingPoolTest.getCovertedValue(3, 1));
+        console.log("Link en Usdc",pruebaLendingPoolTest.getCovertedValue(2, 3));
+        
+        console.log("Dai en Btc",pruebaLendingPoolTest.getCovertedValue(4, 1));
+        console.log("Usdc en Eth",pruebaLendingPoolTest.getCovertedValue(3, 0));
 
         
         

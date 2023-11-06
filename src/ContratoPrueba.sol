@@ -5,6 +5,8 @@ pragma solidity ^0.8.13;
 //import {AggregatorV3Interface} from "./libraries/AggregatorV3Interface.sol";
 import {AToken} from "./libraries/aToken.sol";
 import {ATokenDebt} from "./libraries/aTokenDebt.sol";
+import { DataConsumerV3 } from "../src/DataFeeds.sol";
+import "./libraries/SafeMath.sol";
 
 interface IERC20{
     function mint(address user, uint256 amount) external; 
@@ -42,27 +44,33 @@ contract PruebaLendingPool{
         uint64 loanCounter;
         uint64 poolIdCollateral;
         uint64 poolIdDebt;
-        uint128 amountCollateral;
-        uint128 userDebt;
         bool active;
+        uint128 amountCollateral;
+        uint256 userDebt;
+        uint256 timestamp;
     }
 
     address owner;
-
+    uint128 rate;
     uint128 loanCounter;
     uint128 LTV = 75 * 10 ** 16;
     uint128 _poolId;
     //uint128 amount;
     //uint128 amountCollateral;
+    
+    address ethToUsd = 0x694AA1769357215DE4FAC081bf1f309aDC325306;
+    address btcToUsd = 0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43;
+    address linkToUsd = 0xc59E3633BAAC79493d908e63626716e204A45EdF;
+    address usdcToUsd = 0xA2F78ab2355fe2f984D808B5CeE7FD0A93D5270E;
+    address daiToUsd = 0x14866185B1962B63C3Ea9E03Bc1da838bab34C19;
+       
 
-  
     //mapping (uint256 => Borrow) public borrowConfiguration;//ELIMINAR??
-    //mapping (uint256 => Loan) public loans;
-    //mapping (uint256 => mapping(uint256 => Loan)) public loans;
 
     mapping(address => mapping(uint256 => Loan)) public userLoans;
     mapping(uint256 => Pool)pools;
     mapping(address => mapping(uint256 => uint256)) balances;
+    mapping(address => mapping(uint256 => uint256)) depositTimestamp;
 
     modifier onlyOwner (){
         require (msg.sender == owner, "Only the owner can do this");
@@ -90,6 +98,7 @@ contract PruebaLendingPool{
     ATokenDebt public aTokenDebtLink;
     ATokenDebt public aTokenDebtUsdt;
     ATokenDebt public aTokenDebtDai;
+    DataConsumerV3 public dataConsumerV3;
 
     error NotApproved();
     error MintFailed();
@@ -102,6 +111,10 @@ contract PruebaLendingPool{
     /*error DebtIsLower();
     error YouAlreadyHaveDebt();*/
 
+    event Deposit(address indexed user, uint256 amount, address underlying);
+    event Withdraw(address indexed user, uint256 amount, address underlying);
+    event Borrow(address indexed user, uint256 amount, address underlying);
+    event Repay(address indexed user, uint256 amount, address underlying);
     constructor(){
         /*//weth = IaToken(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);//variante weth
         weth = IaToken(0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9); //funciona bien ? weth?
@@ -117,8 +130,7 @@ contract PruebaLendingPool{
         //wdai = IaToken(0x56694577564FdD577a0ABB20FE95C1E2756C2a11);ada
         //wdai = IaToken(0xd1f79B76d477F026e8119dF29083e3eF8192f923);//sepolia ada
         wdai = IaToken(0x3e622317f8C93f7328350cF0B56d9eD4C620C5d6);//sepolia PRUEBA DAI
-        
-        //wdai = IaToken(address (new aTokenDai()));//ada*/
+        */
  
         owner = msg.sender;
 
@@ -132,6 +144,7 @@ contract PruebaLendingPool{
         aTokenDebtLink = new ATokenDebt("ReplicaAaveTokenDebtLink", "DLINK", 18);
         aTokenDebtUsdt = new ATokenDebt("ReplicaAaveTokenDebtUsdt", "DUSDT", 18);
         aTokenDebtDai = new ATokenDebt("ReplicaAaveTokenDebtDai", "DDAI", 18);
+        dataConsumerV3 = new DataConsumerV3();
         
         createPool(1000 ether, 0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9, address(aTokenEth), address(aTokenDebtEth));
         createPool(1000 ether, 0x92f3B59a79bFf5dc60c0d59eA13a44D082B2bdFC, address(aTokenBtc), address(aTokenDebtBtc));
@@ -153,9 +166,41 @@ contract PruebaLendingPool{
         loan.active = true;
     }*/
 
+
+
+
     function setOwner(address newOwner) public {
         owner = newOwner;
     }
+
+    function getCovertedValue(uint256 coin1, uint256 coin2) public view returns(uint128){
+        //da el valor de la primera moneda en la segunda, por ejemplo 1 btc son 18 eth
+        uint256 coin1ValueinUSD = getDataFeed(coin1)*1e18;
+        uint256 coin2ValueinUSD = getDataFeed(coin2)*1e18;
+        uint256 scaledValue = coin1ValueinUSD *1e18;
+        uint256 convertedValue = scaledValue / coin2ValueinUSD;
+
+        return uint128(convertedValue);
+}
+    function getDataFeed(uint256 coinId) public view returns(uint256){
+        int256 conversion = dataConsumerV3.getChainlinkDataFeedLatestAnswer(coinId);
+        uint256 conversionUnsigned = uint256 (conversion);
+        return conversionUnsigned * 1e18;
+    }
+    /*function getReverseDataFeed() public view returns(uint256){
+        int256 conversion = dataConsumerV3.getChainlinkDataFeedLatestAnswer();
+        uint256 conversionUnsigned = (uint256(conversion)/1e14);
+       
+
+        if (conversionUnsigned == 0) {
+            // Lanzar una excepción en caso de división por cero
+            revert("Division por cero");
+    }
+        
+        //uint256 reverseConversion = SafeMath.div(uint256(1), conversionUnsigned);
+        uint256 reverseConversion = SafeMath.div(1e14, conversionUnsigned);
+        return uint128(reverseConversion);
+    }*/
 
     function getLoanCounter() public view returns (uint128){
         return loanCounter; 
@@ -172,7 +217,7 @@ contract PruebaLendingPool{
         //return 7.5 ether / LTV *10**18; //resuktado 1e19 (10 ether)
         return 7.5 ether *100/75;
     }
-    function getUnderlying(uint64 poolId) public view onlyOwner() returns(address){
+    function getUnderlying(uint64 poolId) public view  returns(address){
         return pools[poolId].underlying;
     }
 
@@ -188,25 +233,67 @@ contract PruebaLendingPool{
         return balances[msg.sender][poolId];
     }
 
-    function getPoolIdDebt(uint64 poolIdCollateral) public view returns (uint256) {
-        return userLoans[msg.sender][poolIdCollateral].poolIdDebt;
+    function getPoolIdDebt(uint128 _loanCounter) public view returns (uint64) {
+        return userLoans[msg.sender][_loanCounter].poolIdDebt;
     }
 
-    function getPoolIdCollateral(uint64 poolIdCollateral) public view returns(uint256){
-        return userLoans[msg.sender][poolIdCollateral].poolIdCollateral;
+    function getPoolIdCollateral(uint128 _loanCounter) public view returns(uint64){
+        return userLoans[msg.sender][_loanCounter].poolIdCollateral;
     }
 
-    function getUserCollateral(uint64 poolIdCollateral) public view returns(uint256){
-        return userLoans[msg.sender][poolIdCollateral].amountCollateral;
+    function getUserCollateral(uint128 _loanCounter) public view returns(uint128){
+        return userLoans[msg.sender][_loanCounter].amountCollateral;
     }
 
-    function getUserDebt(uint64 poolIdCollateral) public view returns(uint256){
-        return userLoans[msg.sender][poolIdCollateral].userDebt;
+    function getUserDebt(uint128 _loanCounter) public view returns(uint256){
+        return userLoans[msg.sender][_loanCounter].userDebt;
+    }
+
+
+    function updatePrincipal(uint128 poolId) public returns(uint256){
+
+        if (balances[msg.sender][poolId] == 0){
+            depositTimestamp[msg.sender][poolId]= uint128(block.timestamp);
+        }
+        uint256 timeElapsed = block.timestamp - depositTimestamp[msg.sender][poolId];
+        if(timeElapsed > 0){
+            //rate = interestRates.getInterestRate();
+            //rate = interestRates.getInterestRate();
+            rate = (5/(pools[poolId].totalDebt))/(pools[poolId].totalSupply);
+            //ASI o asi?: uint256 interest = principal * interestRate / timeElapsed;
+
+            //CUIDADO QUE SON SEGUNDOS
+            //uint256 interest = balances[msg.sender][poolId] * (rate * timeElapsed);
+            //uint256 interest = (balances[msg.sender][poolId]) * ((rate / (365 * 24 * 60 * 60)) * timeElapsed); //CUIDADO, SON SEGUNDOS
+            uint256 interest = ((balances[msg.sender][poolId]) * ((rate / (365 * 24 * 60 * 60)) * timeElapsed))/100; //CUIDADO, SON SEGUNDOS
+            balances[msg.sender][poolId] += interest;
+            depositTimestamp[msg.sender][poolId] = block.timestamp;
+        }
+        return balances[msg.sender][poolId];  
+    }
+
+    function updateBorrow(uint64 poolIdDebt, uint128 _loanCounter ) public returns(uint256){
+        
+        if (userLoans[msg.sender][_loanCounter].userDebt == 0){
+           userLoans[msg.sender][_loanCounter].timestamp = block.timestamp; 
+        } 
+
+        uint256 timeElapsed = block.timestamp - userLoans[msg.sender][_loanCounter].timestamp;
+        if(timeElapsed > 0){
+            //rate = interestRates.getInterestBorrow();
+            rate = (5/(pools[poolIdDebt].totalDebt))/(pools[poolIdDebt].totalSupply);
+            //ASI o asi?: uint256 interest = principal * interestRate / timeElapsed;
+            uint256 interest = getUserDebt(_loanCounter) * (rate / (365 * 24 * 60 * 60)) * timeElapsed; //CUIDADO, SON SEGUNDOS
+            userLoans[msg.sender][_loanCounter].userDebt += interest;
+            userLoans[msg.sender][_loanCounter].timestamp  = block.timestamp;
+        }
+        return userLoans[msg.sender][_loanCounter].userDebt;  
     }
 
 
     function deposit(uint64 poolId, uint128 _amount) public{
         ///CEI: Checks, Effects, Interactions
+        updatePrincipal(poolId);
  
         if (_amount == 0){
             revert ItCantBeZero();
@@ -226,10 +313,11 @@ contract PruebaLendingPool{
             if(!success){
                 revert TransferFailed();
             }
-        
+        emit Deposit(msg.sender, _amount, pools[poolId].underlying);
     }
     function withdraw(uint64 poolId, uint128 _amount) public{
         ///CEI: Checks, Effects, Interactions
+        updatePrincipal(poolId);
 
         if (_amount > balances[msg.sender][poolId]){
             revert InsufficientFunds();
@@ -244,10 +332,12 @@ contract PruebaLendingPool{
             if(!success){
                 revert TransferFailed();
             }
+        emit Withdraw(msg.sender, _amount, pools[poolId].underlying);
     }
 
     function borrow(uint64 poolIdCollateral, uint64 poolIdDebt, uint128 _amount) public {
         ///CEI: Checks, Effects, Interactions
+        updateBorrow(poolIdDebt, loanCounter);
 
         if (balances[msg.sender][poolIdCollateral] < _amount){
             revert InsufficientCollateral();
@@ -267,10 +357,14 @@ contract PruebaLendingPool{
         balances[msg.sender][poolIdCollateral] -= _amount; 
 
         loanCounter ++;
+
+        emit Borrow(msg.sender, userDebt, pools[poolIdDebt].underlying);
     } 
 
     //COMPROBAR SI HAY UNDERFLOW AL REPAGAR MAS DE LO QUE SE DEBE
     function repay( uint64 poolIdDebt, uint64 poolIdCollateral, uint128 _amount, uint128 _loanCounter)payable public {
+        updateBorrow(poolIdDebt, _loanCounter);
+
         uint128 amountCollateral = _amount / LTV *10**18;
 
         if(!(userLoans[msg.sender][_loanCounter].active == true)){
@@ -286,6 +380,7 @@ contract PruebaLendingPool{
         pools[poolIdDebt].totalSupply += _amount;
         balances[msg.sender][poolIdCollateral] += amountCollateral; 
 
+        emit Repay(msg.sender, _amount, pools[poolIdDebt].underlying);
 
         /*loans[poolIdCollateral][poolIdDebt].userDebt -= _amount;
         loans[poolIdCollateral][poolIdDebt].amountCollateral -= amountCollateral;
