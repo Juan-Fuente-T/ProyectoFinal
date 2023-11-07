@@ -5,8 +5,9 @@ pragma solidity ^0.8.13;
 //import {AggregatorV3Interface} from "./libraries/AggregatorV3Interface.sol";
 import {AToken} from "./libraries/aToken.sol";
 import {ATokenDebt} from "./libraries/aTokenDebt.sol";
-import { DataConsumerV3 } from "../src/DataFeeds.sol";
+import {DataConsumerV3} from "../src/DataFeeds.sol";
 import "./libraries/SafeMath.sol";
+import {console} from "forge-std/console.sol";
 
 interface IERC20{
     function mint(address user, uint256 amount) external; 
@@ -29,11 +30,12 @@ interface IERC20{
 }
 
 contract PruebaLendingPool{
+    using SafeMath for uint256;
 
 
     struct Pool{
-        uint128 totalSupply;
-        uint128 totalDebt;
+        uint256 totalSupply;
+        uint256 totalDebt;
         address underlying;//token subyacente
         address aToken;
         address aTokenDebt;
@@ -45,25 +47,25 @@ contract PruebaLendingPool{
         uint64 poolIdCollateral;
         uint64 poolIdDebt;
         bool active;
-        uint128 amountCollateral;
+        uint256 amountCollateral;
         uint256 userDebt;
         uint256 timestamp;
     }
 
     address owner;
-    uint128 rate;
+    uint256 rate;
+    uint256 userDebt;
     uint128 loanCounter;
-    uint128 LTV = 75 * 10 ** 16;
     uint128 _poolId;
     //uint128 amount;
     //uint128 amountCollateral;
     
-    address ethToUsd = 0x694AA1769357215DE4FAC081bf1f309aDC325306;
+    /*address ethToUsd = 0x694AA1769357215DE4FAC081bf1f309aDC325306;
     address btcToUsd = 0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43;
     address linkToUsd = 0xc59E3633BAAC79493d908e63626716e204A45EdF;
     address usdcToUsd = 0xA2F78ab2355fe2f984D808B5CeE7FD0A93D5270E;
     address daiToUsd = 0x14866185B1962B63C3Ea9E03Bc1da838bab34C19;
-       
+      */ 
 
     //mapping (uint256 => Borrow) public borrowConfiguration;//ELIMINAR??
 
@@ -107,6 +109,7 @@ contract PruebaLendingPool{
     error DebtDontExist();
     error InsufficientFunds();
     error InsufficientCollateral();
+    error RepaymentExceedsDebt();
        
     /*error DebtIsLower();
     error YouAlreadyHaveDebt();*/
@@ -146,14 +149,15 @@ contract PruebaLendingPool{
         aTokenDebtDai = new ATokenDebt("ReplicaAaveTokenDebtDai", "DDAI", 18);
         dataConsumerV3 = new DataConsumerV3();
         
-        createPool(1000 ether, 0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9, address(aTokenEth), address(aTokenDebtEth));
-        createPool(1000 ether, 0x92f3B59a79bFf5dc60c0d59eA13a44D082B2bdFC, address(aTokenBtc), address(aTokenDebtBtc));
+        createPool(10000000 ether, 0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9, address(aTokenEth), address(aTokenDebtEth));
+        createPool(10000000 ether, 0x92f3B59a79bFf5dc60c0d59eA13a44D082B2bdFC, address(aTokenBtc), address(aTokenDebtBtc));
         //createPool(2, 1000 ether, 0x779877A7B0D9E8603169DdbD7836e478b4624789, address(aTokenLink));//Buena?ADRI
         //createPool(2, 1000 ether, 0x010300C2cA5F5Ce31Ae1FaB11586d7bb685805C8, address(aTokenLink));
-        createPool(1000 ether, 0x92f3B59a79bFf5dc60c0d59eA13a44D082B2bdFC, address(aTokenLink), address(aTokenDebtLink));//prueba btc
+        createPool(10000000 ether, 0xf531B8F309Be94191af87605CfBf600D71C2cFe0, address(aTokenLink), address(aTokenDebtLink));//prueba btc
         //createPool(3, 10000 ether, 0x7169D38820dfd117C3FA1f22a697dBA58d90BA06, address(aTokenUsdt));//Buena?ADRI
-        createPool(10000 ether, 0x92f3B59a79bFf5dc60c0d59eA13a44D082B2bdFC, address(aTokenUsdt), address(aTokenDebtUsdt));//prueba btc
-        createPool(10000 ether, 0x3e622317f8C93f7328350cF0B56d9eD4C620C5d6,address(aTokenDai), address(aTokenDebtDai));
+        //createPool(2000000 ether, 0x92f3B59a79bFf5dc60c0d59eA13a44D082B2bdFC, address(aTokenUsdt), address(aTokenDebtUsdt));//prueba btc
+        createPool(2000000 ether, 0x74540605Dc99f9cd65A3eA89231fFA727B1049E2, address(aTokenUsdt), address(aTokenDebtUsdt));//prueba OTRA Usdc
+        createPool(2000000 ether, 0x3e622317f8C93f7328350cF0B56d9eD4C620C5d6,address(aTokenDai), address(aTokenDebtDai));//DAI
        
     }
 
@@ -173,7 +177,7 @@ contract PruebaLendingPool{
         owner = newOwner;
     }
 
-    function getCovertedValue(uint256 coin1, uint256 coin2) public view returns(uint128){
+    function getConvertedValue(uint256 coin1, uint256 coin2) public view returns(uint128){
         //da el valor de la primera moneda en la segunda, por ejemplo 1 btc son 18 eth
         uint256 coin1ValueinUSD = getDataFeed(coin1)*1e18;
         uint256 coin2ValueinUSD = getDataFeed(coin2)*1e18;
@@ -221,11 +225,11 @@ contract PruebaLendingPool{
         return pools[poolId].underlying;
     }
 
-    function totalSupply(uint64 poolId) public view returns(uint128){
+    function totalSupply(uint64 poolId) public view returns(uint256){
         return pools[poolId].totalSupply;
     }
 
-    function totalDebt(uint64 poolId) public view returns(uint128){
+    function totalDebt(uint64 poolId) public view returns(uint256){
         return pools[poolId].totalDebt;
     }
 
@@ -241,7 +245,7 @@ contract PruebaLendingPool{
         return userLoans[msg.sender][_loanCounter].poolIdCollateral;
     }
 
-    function getUserCollateral(uint128 _loanCounter) public view returns(uint128){
+    function getUserCollateral(uint128 _loanCounter) public view returns(uint256){
         return userLoans[msg.sender][_loanCounter].amountCollateral;
     }
 
@@ -258,7 +262,8 @@ contract PruebaLendingPool{
         uint256 timeElapsed = block.timestamp - depositTimestamp[msg.sender][poolId];
         if(timeElapsed > 0){
             //rate = interestRates.getInterestRate();
-            //rate = interestRates.getInterestRate();
+
+            //5 / (btc prestado) / (btc depositado)
             rate = (5/(pools[poolId].totalDebt))/(pools[poolId].totalSupply);
             //ASI o asi?: uint256 interest = principal * interestRate / timeElapsed;
 
@@ -339,11 +344,26 @@ contract PruebaLendingPool{
         ///CEI: Checks, Effects, Interactions
         updateBorrow(poolIdDebt, loanCounter);
 
+        uint128 convertedValue = getConvertedValue(poolIdCollateral, poolIdDebt);
+
         if (balances[msg.sender][poolIdCollateral] < _amount){
             revert InsufficientCollateral();
         }
+        console.log("VALORES BORROW");
+        console.log("Amount",_amount);
+        console.log("ConvertedValueANTES",convertedValue);
+        //uint128 userDebt = (_amount * 75 / 100) * (convertedValue );
+        uint256 loanToValue = (convertedValue * 7500 / 10000);
+        console.log("loanToValue",loanToValue);
+        //userDebt = ((_amount/1e18) * loanToValue);
+        uint256 debt = ((_amount* loanToValue));
+        userDebt = debt / 1e18;
+        //uint256 debt = ((_amount/1e18) * loanToValue);
+        //userDebt = debt / 1 ether;
+        console.log("UserDebt",userDebt);
+        console.log("UserDebt-1e14",userDebt/1e14);
+        console.log("-----------------FIN VALORES BORROW-------------");
 
-        uint128 userDebt = _amount * 75 / 100;
 
         IERC20(pools[poolIdDebt].aToken).mint(msg.sender, userDebt);
         
@@ -352,33 +372,69 @@ contract PruebaLendingPool{
         userLoans[msg.sender][loanCounter].amountCollateral = _amount;
         userLoans[msg.sender][loanCounter].userDebt = userDebt;
         userLoans[msg.sender][loanCounter].active = true;
-
-        pools[poolIdDebt].totalSupply -= userDebt;
+        console.log("UserDebtFUNCION",userLoans[msg.sender][loanCounter].userDebt);
+       
+        //pools[poolIdDebt].totalSupply -= userDebt;
         balances[msg.sender][poolIdCollateral] -= _amount; 
 
         loanCounter ++;
+
+        (bool success) = IERC20(pools[poolIdDebt].underlying).transfer(msg.sender, userDebt);
+            if(!success){
+                revert TransferFailed();
+            }
 
         emit Borrow(msg.sender, userDebt, pools[poolIdDebt].underlying);
     } 
 
     //COMPROBAR SI HAY UNDERFLOW AL REPAGAR MAS DE LO QUE SE DEBE
-    function repay( uint64 poolIdDebt, uint64 poolIdCollateral, uint128 _amount, uint128 _loanCounter)payable public {
+    function repay( uint64 poolIdDebt, uint64 poolIdCollateral, uint256 _amount, uint128 _loanCounter)payable public {
         updateBorrow(poolIdDebt, _loanCounter);
 
-        uint128 amountCollateral = _amount / LTV *10**18;
+        uint256 weiValue = 111314656390658967;
+        uint256 etherValue = weiValue.div(1e18);
+        //uint256 etherValue = weiValue * 1e18 / 1e18; 
+        console.log("Prueba", etherValue); 
+
+        console.log("LoanCounter", _loanCounter); 
+        console.log("Amount", _amount); 
+        console.log("LoanUserDebt",userLoans[msg.sender][_loanCounter].userDebt);
+        /*uint128 convertedValue = getConvertedValue(poolIdDebt, poolIdCollateral);
+
+        uint256 loanToValue = (convertedValue * 7500 / 10000);
+        console.log("loanToValue",loanToValue);
+        uint256 userDebt = (_amount/1e18) * loanToValue;
+        */
+
+        uint256 amountCollateral = _amount ;
 
         if(!(userLoans[msg.sender][_loanCounter].active == true)){
             revert DebtDontExist();
         }
+
+            if (_amount > userLoans[msg.sender][_loanCounter].userDebt) {
+        revert RepaymentExceedsDebt();
+    }
+
         IERC20(pools[poolIdDebt].aToken).burn(msg.sender, _amount);
         
         userLoans[msg.sender][_loanCounter].userDebt -= _amount;
         userLoans[msg.sender][_loanCounter].amountCollateral -= amountCollateral;
-        if(userLoans[msg.sender][_loanCounter].userDebt == 0){
+        /*if(userLoans[msg.sender][_loanCounter].userDebt == 0){
             userLoans[msg.sender][_loanCounter].active = false;
-        }
+        }*/
         pools[poolIdDebt].totalSupply += _amount;
         balances[msg.sender][poolIdCollateral] += amountCollateral; 
+
+        /*(bool approved) = IERC20(pools[poolId].underlying).approve(address(this), _amount);
+            if (!approved){
+                revert NotApproved();
+
+            }
+        (bool success) = IERC20(pools[poolId].underlying).transferFrom(msg.sender, address(this), _amount);
+            if(!success){
+                revert TransferFailed();
+            }*/
 
         emit Repay(msg.sender, _amount, pools[poolIdDebt].underlying);
 
