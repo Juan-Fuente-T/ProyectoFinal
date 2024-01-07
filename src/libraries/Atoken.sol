@@ -46,5 +46,8 @@ contract AToken is ERC20{
     function userBalance(address user) external view returns (uint256){
         return balanceOf[user];
     }
+    function getAllowance(address _owner, address spender) public view returns (uint256) {
+    return allowance[_owner][spender];
+}
     
 }

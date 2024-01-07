@@ -3,10 +3,10 @@ pragma solidity ^0.8.21;
 
 //import {ERC20} from "./libraries/ERC20.sol";
 //import {AggregatorV3Interface} from "./libraries/AggregatorV3Interface.sol";
-import {AToken} from "./libraries/aToken.sol";
-import {ATokenDebt} from "./libraries/aTokenDebt.sol";
-import {DataConsumerV3} from "../src/DataFeeds.sol";
-import "./libraries/SafeMath.sol";
+import {AToken} from "../libraries/aToken.sol";
+import {ATokenDebt} from "../libraries/aTokenDebt.sol";
+import {DataConsumerV3} from "../DataFeeds.sol";
+import "../libraries/SafeMath.sol";
 import {console} from "forge-std/console.sol";
 
 interface IERC20 {
@@ -53,7 +53,7 @@ interface IERC20 {
     ) external;
 }
 
-contract LendingPool {
+contract PruebaLendingPool {
     using SafeMath for uint256;
 
     struct Pool {
@@ -77,12 +77,22 @@ contract LendingPool {
     address owner;
     uint256 rate;
     uint256 userDebt;
-    uint256 public loanToValue;
+    uint128 loanCounter;
     uint128 _poolId;
-    uint64 loanCounter;
+    //uint256 amount;
+    //uint256 amountCollateral;
+
+    /*address ethToUsd = 0x694AA1769357215DE4FAC081bf1f309aDC325306;
+    address btcToUsd = 0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43;
+    address linkToUsd = 0xc59E3633BAAC79493d908e63626716e204A45EdF;
+    address usdcToUsd = 0xA2F78ab2355fe2f984D808B5CeE7FD0A93D5270E;
+    address daiToUsd = 0x14866185B1962B63C3Ea9E03Bc1da838bab34C19;
+      */
+
+    //mapping (uint256 => Borrow) public borrowConfiguration;//ELIMINAR??
 
     mapping(address => mapping(uint256 => Loan)) public userLoans;
-    mapping(uint256 => Pool) public pools;
+    mapping(uint256 => Pool) pools;
     mapping(address => mapping(uint256 => uint256)) balances;
     mapping(address => mapping(uint256 => uint256)) depositTimestamp;
 
@@ -126,7 +136,6 @@ contract LendingPool {
     error InsufficientFunds();
     error InsufficientCollateral();
     error RepaymentExceedsDebt();
-    error ArithmeticOverflow();
 
     /*error DebtIsLower();
     error YouAlreadyHaveDebt();*/
@@ -137,7 +146,24 @@ contract LendingPool {
     event Repay(address indexed user, uint256 amount, address underlying);
 
     constructor() {
+        /*//weth = IaToken(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);//variante weth
+        weth = IaToken(0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9); //funciona bien ? weth?
+        //weth = IaToken(0x6F03999B2CC712570e75c73432328B1B669716d1);
+        //aToken = IaToken(0x35AAd3fD9fe3a8F1897a119fc5DaF34FB6cF4B62);
+        //wbtc = IaToken(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
+        wbtc = IaToken(0x92f3B59a79bFf5dc60c0d59eA13a44D082B2bdFC);
+        
+        //wlink = IaToken(0x010300C2cA5F5Ce31Ae1FaB11586d7bb685805C8);//
+        wlink = IaToken(0x779877A7B0D9E8603169DdbD7836e478b4624789);// PRUEBA Variante
+        //wusdt = IaToken(0xdAC17F958D2ee523a2206206994597C13D831ec7);//usdt
+        wusdt = IaToken(0x7169D38820dfd117C3FA1f22a697dBA58d90BA06);//usdt VARIANTE PRUEBA
+        //wdai = IaToken(0x56694577564FdD577a0ABB20FE95C1E2756C2a11);ada
+        //wdai = IaToken(0xd1f79B76d477F026e8119dF29083e3eF8192f923);//sepolia ada
+        wdai = IaToken(0x3e622317f8C93f7328350cF0B56d9eD4C620C5d6);//sepolia PRUEBA DAI
+        */
+
         owner = msg.sender;
+
         aTokenEth = new AToken("ReplicaAaveTokenEth", "ATKETH", 18);
         aTokenBtc = new AToken("ReplicaAaveTokenBtc", "ATKBTC", 18);
         aTokenLink = new AToken("ReplicaAaveTokenLink", "ATKLINK", 18);
@@ -157,14 +183,15 @@ contract LendingPool {
         );
         aTokenDebtDai = new ATokenDebt("ReplicaAaveTokenDebtDai", "DDAI", 18);
         dataConsumerV3 = new DataConsumerV3();
+
         createPool(
-            100000 * 1e18,
+            10000000000 ether,
             0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9,
             address(aTokenEth),
             address(aTokenDebtEth)
         );
         createPool(
-            100000 * 1e18,
+            10000000 ether,
             0x92f3B59a79bFf5dc60c0d59eA13a44D082B2bdFC,
             address(aTokenBtc),
             address(aTokenDebtBtc)
@@ -172,7 +199,7 @@ contract LendingPool {
         //createPool(2, 1000 ether, 0x779877A7B0D9E8603169DdbD7836e478b4624789, address(aTokenLink));//Buena?ADRI
         //createPool(2, 1000 ether, 0x010300C2cA5F5Ce31Ae1FaB11586d7bb685805C8, address(aTokenLink));
         createPool(
-            19999999999999 * 1e18,
+            10000000000 ether,
             0xf531B8F309Be94191af87605CfBf600D71C2cFe0,
             address(aTokenLink),
             address(aTokenDebtLink)
@@ -180,13 +207,13 @@ contract LendingPool {
         //createPool(3, 10000 ether, 0x7169D38820dfd117C3FA1f22a697dBA58d90BA06, address(aTokenUsdt));//Buena?ADRI
         //createPool(2000000 ether, 0x92f3B59a79bFf5dc60c0d59eA13a44D082B2bdFC, address(aTokenUsdt), address(aTokenDebtUsdt));//prueba btc
         createPool(
-            100000000000000 * 1e18,
+            2000000 ether,
             0x74540605Dc99f9cd65A3eA89231fFA727B1049E2,
             address(aTokenUsdt),
             address(aTokenDebtUsdt)
         ); //prueba OTRA Usdc
         createPool(
-            100000000000000 * 1e18,
+            2000000 ether,
             0x3e622317f8C93f7328350cF0B56d9eD4C620C5d6,
             address(aTokenDai),
             address(aTokenDebtDai)
@@ -211,21 +238,12 @@ contract LendingPool {
         uint256 coin2
     ) public view returns (uint256) {
         //da el valor de la primera moneda en la segunda, por ejemplo 1 btc son 18 eth
-        uint256 coin1ValueinUSD = getDataFeed(coin1);
-        uint256 coin2ValueinUSD = getDataFeed(coin2);
+        uint256 coin1ValueinUSD = getDataFeed(coin1) * 1e18;
+        uint256 coin2ValueinUSD = getDataFeed(coin2) * 1e18;
+        uint256 scaledValue = coin1ValueinUSD * 1e18;
+        uint256 convertedValue = scaledValue / coin2ValueinUSD;
 
-        if (coin1ValueinUSD == 0) {
-            // Manejar el caso en el que no se puede obtener el valor de la primera moneda
-            revert("Error: No se puede obtener el valor de la primera moneda");
-        }
-        if (coin2ValueinUSD == 0) {
-            // Manejar el caso en el que no se puede obtener el valor de la segunda moneda
-            revert("Error: No se puede obtener el valor de la segunda moneda");
-        }
-        // Realizar la conversión solo si ambos valores son distintos de cero
-        uint256 convertedValue = (coin1ValueinUSD * 1e18) / coin2ValueinUSD;
-
-        return convertedValue;
+        return uint256(convertedValue);
     }
 
     function getDataFeed(uint256 coinId) public view returns (uint256) {
@@ -236,17 +254,28 @@ contract LendingPool {
         return conversionUnsigned * 1e18;
     }
 
+    /*function getReverseDataFeed() public view returns(uint256){
+        int256 conversion = dataConsumerV3.getChainlinkDataFeedLatestAnswer();
+        uint256 conversionUnsigned = (uint256(conversion)/1e14);
+       
+
+        if (conversionUnsigned == 0) {
+            // Lanzar una excepción en caso de división por cero
+            revert("Division por cero");
+    }
+        
+        //uint256 reverseConversion = SafeMath.div(uint256(1), conversionUnsigned);
+        uint256 reverseConversion = SafeMath.div(1e14, conversionUnsigned);
+        return uint128(reverseConversion);
+    }*/
+
     function getLoanCounter() public view returns (uint128) {
         return loanCounter;
     }
 
-    function getLoanToValue() public view returns (uint256) {
-        return loanToValue;
-    }
-
-    /*
     //ESTA FUNCION ES UTIL MAS ALLA DE TEST??
     function getAmount() public pure returns (uint256) {
+        //return amount;
         return (10 ether * 75) / 100; //resultado 7.5e18 (7.5 ether)
     }
 
@@ -256,7 +285,7 @@ contract LendingPool {
         //return 7.5 ether / LTV *10**18; //resuktado 1e19 (10 ether)
         return (7.5 ether * 100) / 75;
     }
-*/
+
     function getUnderlying(uint64 poolId) public view returns (address) {
         return pools[poolId].underlying;
     }
@@ -289,11 +318,8 @@ contract LendingPool {
         return userLoans[msg.sender][_loanCounter].amountCollateral;
     }
 
-    function getUserDebt(
-        address user,
-        uint128 _loanCounter
-    ) public view returns (uint256) {
-        return userLoans[user][_loanCounter].userDebt;
+    function getUserDebt(uint128 _loanCounter) public view returns (uint256) {
+        return userLoans[msg.sender][_loanCounter].userDebt;
     }
 
     function updatePrincipal(uint128 poolId) public returns (uint256) {
@@ -338,7 +364,7 @@ contract LendingPool {
                 (5 / (pools[poolIdDebt].totalDebt)) /
                 (pools[poolIdDebt].totalSupply);
             //ASI o asi?: uint256 interest = principal * interestRate / timeElapsed;
-            uint256 interest = getUserDebt(msg.sender, _loanCounter) *
+            uint256 interest = getUserDebt(_loanCounter) *
                 (rate / (365 * 24 * 60 * 60)) *
                 timeElapsed; //CUIDADO, SON SEGUNDOS
             userLoans[msg.sender][_loanCounter].userDebt += interest;
@@ -357,30 +383,16 @@ contract LendingPool {
 
         IERC20(pools[poolId].aToken).mint(msg.sender, _amount);
 
-        if (pools[poolId].totalSupply + _amount < pools[poolId].totalSupply) {
-            revert ArithmeticOverflow();
-        }
+        pools[poolId].totalSupply += _amount;
+        balances[msg.sender][poolId] += _amount;
 
-        if (
-            balances[msg.sender][poolId] + _amount <
-            balances[msg.sender][poolId]
-        ) {
-            revert ArithmeticOverflow();
-        }
-
-        pools[poolId].totalSupply = pools[poolId].totalSupply.add(_amount);
-        balances[msg.sender][poolId] = balances[msg.sender][poolId].add(
-            _amount
-        );
         bool approved = IERC20(pools[poolId].underlying).approve(
             address(this),
             _amount
         );
-
         if (!approved) {
             revert NotApproved();
         }
-
         bool success = IERC20(pools[poolId].underlying).transferFrom(
             msg.sender,
             address(this),
@@ -420,6 +432,7 @@ contract LendingPool {
         uint64 poolIdDebt,
         uint256 _amount
     ) public {
+        console.log("DebtAntes", totalDebt(poolIdDebt));
         ///CEI: Checks, Effects, Interactions
         updateBorrow(poolIdDebt, loanCounter);
 
@@ -430,45 +443,30 @@ contract LendingPool {
             poolIdCollateral,
             poolIdDebt
         );
-        //uint256 value = convertedValue / 1e18;
-        //uint256 value = convertedValue;
-        // loanToValue = ((convertedValue * 7500) / 10000);
-        //loanToValue = ((value.mul(7500)) / 10000); //mul = multiplicaion
-        //userDebt = _amount.mul(loanToValue);
-        //userDebt = ((_amount * loanToValue) / 1e18);
-        //userDebt = _amount * loanToValue;
 
-        loanToValue = convertedValue.mul(7500).div(10000);
-        userDebt = _amount.mul(loanToValue).div(1e18);
-        //userDebt = _amount.div(loanToValue);
+        uint256 loanToValue = ((convertedValue * 7500) / 10000);
 
-        console.log("ConvertedValue", convertedValue);
-        //console.log("value", value);
-        console.log("loanToValue", loanToValue);
-        console.log("userDebt", userDebt);
+        userDebt = ((_amount * loanToValue) / 1e18);
 
-        userLoans[msg.sender][loanCounter].loanCounter = loanCounter;
+        IERC20(pools[poolIdDebt].aToken).mint(msg.sender, userDebt);
+
+        pools[poolIdDebt].totalDebt += userDebt;
+
         userLoans[msg.sender][loanCounter].poolIdCollateral = poolIdCollateral;
         userLoans[msg.sender][loanCounter].poolIdDebt = poolIdDebt;
         userLoans[msg.sender][loanCounter].amountCollateral += _amount;
         userLoans[msg.sender][loanCounter].userDebt += userDebt;
         userLoans[msg.sender][loanCounter].active = true;
+        console.log(
+            "UserDebtFUNCTION",
+            userLoans[msg.sender][loanCounter].userDebt
+        );
+        console.log("DebtDespues", totalDebt(poolIdDebt));
 
-        pools[poolIdDebt].totalDebt += userDebt;
-
+        //pools[poolIdDebt].totalSupply -= userDebt;
         balances[msg.sender][poolIdCollateral] -= _amount;
 
         loanCounter++;
-
-        IERC20(pools[poolIdDebt].aToken).mint(msg.sender, userDebt);
-
-        console.log("userDebtaTransferir", userDebt);
-        console.log("CantidadqueHAY:", totalSupply(poolIdDebt));
-
-        require(
-            userDebt <= totalSupply(poolIdDebt),
-            "Insufficient supply of tokens"
-        );
 
         bool success = IERC20(pools[poolIdDebt].underlying).transfer(
             msg.sender,
@@ -490,6 +488,30 @@ contract LendingPool {
     ) public payable {
         updateBorrow(poolIdDebt, _loanCounter);
 
+        console.log("LoanCounter", _loanCounter);
+        console.log("Amount", _amount);
+        console.log(
+            "LoanUserDebt",
+            userLoans[msg.sender][_loanCounter].userDebt
+        );
+        uint256 convertedValue = getConvertedValue(
+            poolIdDebt,
+            poolIdCollateral
+        );
+
+        uint256 collateral = (_amount / 7500) * 10000;
+        //uint256 valueCollateral = collateral * 10000;
+        uint256 amountCollateral = (convertedValue * collateral) / 1e18;
+        console.log("ConvertedValue", convertedValue);
+        //userDebt = (_amount/1e18) * loanToValue;
+
+        //uint256 amountCollateral = (_amount * 10000) / 7500;
+
+        console.log("Collateral", collateral);
+        console.log("AmountCollateral", amountCollateral);
+        console.log("CollateralFuncion", getUserCollateral(_loanCounter));
+        console.log("AmountRepay", _amount);
+
         if (!(userLoans[msg.sender][_loanCounter].active == true)) {
             revert DebtDontExist();
         }
@@ -497,13 +519,17 @@ contract LendingPool {
         if (_amount > userLoans[msg.sender][_loanCounter].userDebt) {
             revert RepaymentExceedsDebt();
         }
-        uint256 convertedValue = getConvertedValue(
-            poolIdDebt,
-            poolIdCollateral
-        );
 
-        uint256 collateral = (_amount / 7500) * 10000;
-        uint256 amountCollateral = (convertedValue * collateral) / 1e18;
+        console.log(
+            "User Balance Before Burn",
+            IERC20(pools[poolIdDebt].aToken).balanceOf(msg.sender)
+        );
+        IERC20(pools[poolIdDebt].aToken).burn(msg.sender, _amount);
+        console.log("Se ha quemado Repay");
+        console.log(
+            "User Balance After Burn",
+            IERC20(pools[poolIdDebt].aToken).balanceOf(msg.sender)
+        );
 
         userLoans[msg.sender][_loanCounter].userDebt -= _amount;
         userLoans[msg.sender][_loanCounter]
@@ -514,23 +540,37 @@ contract LendingPool {
         }
 
         pools[poolIdDebt].totalDebt -= _amount;
-
+        //pools[poolIdDebt].totalSupply += _amount;
         balances[msg.sender][poolIdCollateral] += amountCollateral;
+        console.log(
+            "UserDebtRepay",
+            userLoans[msg.sender][_loanCounter].userDebt
+        );
+        console.log(
+            "UserCollateralRepay",
+            userLoans[msg.sender][_loanCounter].amountCollateral
+        );
 
-        IERC20(pools[poolIdDebt].aToken).burn(msg.sender, _amount);
+        console.log(
+            "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXAmountTransfer",
+            _amount
+        );
+        console.log(
+            "Allowance Before Approval:",
+            IERC20(pools[poolIdDebt].underlying).allowance(
+                msg.sender,
+                address(this)
+            )
+        );
 
         bool approved = IERC20(pools[poolIdDebt].underlying).approve(
             address(this),
             _amount
         );
-        uint256 allowance = IERC20(pools[poolIdDebt].underlying).getAllowance(
-            msg.sender,
-            address(this)
-        );
-        if (!approved || allowance < _amount) {
+        if (!approved) {
             revert NotApproved();
         }
-
+        //console.log("UserAllowance", IERC20(pools[poolIdDebt].underlying).getAllowance(owner, msg.sender));
         bool success = IERC20(pools[poolIdDebt].underlying).transferFrom(
             msg.sender,
             address(this),
@@ -541,60 +581,12 @@ contract LendingPool {
         }
 
         emit Repay(msg.sender, _amount, pools[poolIdDebt].underlying);
+        console.log(
+            "Allowance After Approval:",
+            IERC20(pools[poolIdDebt].underlying).allowance(
+                msg.sender,
+                address(this)
+            )
+        );
     }
 }
-
-/**
-
-    function borrow(
-        uint64 poolIdCollateral,
-        uint64 poolIdDebt,
-        uint256 _amount
-    ) public {
-        ///CEI: Checks, Effects, Interactions
-        updateBorrow(poolIdDebt, loanCounter);
-
-        if (balances[msg.sender][poolIdCollateral] < _amount) {
-            revert InsufficientCollateral();
-        }
-        uint256 convertedValue = getConvertedValue(
-            poolIdCollateral,
-            poolIdDebt
-        );
-        uint256 value = convertedValue / 1e18;
-        //uint256 loanToValue = ((convertedValue * 7500) / 10000);
-        uint256 loanToValue = ((value * 7500) / 10000);
-        userDebt = _amount.mul(loanToValue);
-        //userDebt = ((_amount * loanToValue) / 1e18);
-        //userDebt = _amount * loanToValue;
-
-        userLoans[msg.sender][loanCounter] = Loan({
-            loanCounter: loanCounter,
-            poolIdCollateral: poolIdCollateral,
-            poolIdDebt: poolIdDebt,
-            active: true,
-            amountCollateral: _amount,
-            userDebt: userDebt,
-            timestamp: block.timestamp
-        });
-
-        pools[poolIdDebt].totalDebt += userDebt;
-
-        balances[msg.sender][poolIdCollateral] -= _amount;
-
-        loanCounter++;
-
-        IERC20(pools[poolIdDebt].aToken).mint(msg.sender, userDebt);
-
-        bool success = IERC20(pools[poolIdDebt].underlying).transfer(
-            msg.sender,
-            userDebt
-        );
-        if (!success) {
-            revert TransferFailed();
-        }
-
-        emit Borrow(msg.sender, userDebt, pools[poolIdDebt].underlying);
-    }
-
- */

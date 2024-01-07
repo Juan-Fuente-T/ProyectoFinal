@@ -9,13 +9,13 @@ out/
 
 # Docs
 docs/
-cosas_necesarias.txt
-trastos.sol
-loanPool.sol
-LendingPool - copia.sol
-EjemploMock.sol
+*.txt
+/pruebas-copias
 
 # Dotenv file
 .env
+
+# Node-modules
+/node_modules
 
 
